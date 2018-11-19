@@ -1,9 +1,10 @@
 package godo
 
-import "syscall"
+import "flag"
+import "github.com/spf13/cobra"
 
 func main() {
-	cmd := "ls /home"
-	syscall.Exec(cmd)
+	const dataFile = `/home/sun/data/godo_data.dat`
 
+	action := flag.String("action")
 }
