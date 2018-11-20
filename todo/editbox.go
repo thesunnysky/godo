@@ -253,7 +253,7 @@ func redraw_all() {
 	termbox.Flush()
 }
 
-func main() {
+func _main() {
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
