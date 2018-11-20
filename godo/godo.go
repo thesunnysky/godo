@@ -46,7 +46,7 @@ func main() {
 		},
 	}
 
-	var rootCmd = &cobra.Command{Use: "todo"}
+	var rootCmd = &cobra.Command{Use: "godo"}
 	rootCmd.AddCommand(addCmd, delCmd, listCmd, cleanCmd)
 	rootCmd.Execute()
 }
