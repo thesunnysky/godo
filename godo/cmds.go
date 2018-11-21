@@ -17,7 +17,7 @@ func init() {
 	homeDir := os.Getenv("HOME")
 	configFile := homeDir + "/" + CONFIG_FILE
 	if !pathExist(configFile) {
-		fmt.Printf("config file:%s do not exist\n", configFile)
+		fmt.Printf("config file:$HOME/%s do not exist\n", CONFIG_FILE)
 		os.Exit(CONFIG_FILE_DO_NOT_EXIST)
 	}
 	f, err := os.Open(configFile)
