@@ -8,4 +8,5 @@ const CONFIG_FILE_DO_NOT_EXIST = 2
 
 const FILE_MAKS = 0666
 
-const LINE_SEPARATOR = '\n'
+const UNIX_LINE_SEPARATOR = '\n'
+

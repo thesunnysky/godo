@@ -7,13 +7,25 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 )
 
 var dataFile string
+var lineSeparator byte
 
 func init() {
+	initLineSeparator()
+
+	initDataFile()
+}
+
+func initLineSeparator() {
+	lineSeparator = byte(UNIX_LINE_SEPARATOR)
+}
+
+func initDataFile() {
 	homeDir := os.Getenv("HOME")
 	configFile := homeDir + "/" + CONFIG_FILE
 	if !pathExist(configFile) {
@@ -26,7 +38,7 @@ func init() {
 	}
 	defer f.Close()
 
-	dataFile, err = bufio.NewReader(f).ReadString(LINE_SEPARATOR)
+	dataFile, err = bufio.NewReader(f).ReadString(lineSeparator)
 	if err != nil {
 		panic(err)
 	}
@@ -141,7 +153,7 @@ func readDataFile(f *os.File) []string {
 	br := bufio.NewReader(f)
 	fileData := make([]string, 0)
 	for {
-		str, err := br.ReadString(LINE_SEPARATOR)
+		str, err := br.ReadString(lineSeparator)
 		if err == io.EOF {
 			break
 		}
@@ -176,4 +188,8 @@ func pathExist(path string) bool {
 		return false
 	}
 	return true
+}
+
+func osType() string {
+	return runtime.GOOS
 }

@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"fmt"
+	"runtime"
+	"testing"
+)
 
 func TestDelCmds(t *testing.T) {
 	args := []string{"4"}
@@ -10,4 +14,8 @@ func TestDelCmds(t *testing.T) {
 func TestListCmds(t *testing.T) {
 	args := []string{}
 	listCmdImpl(args)
+}
+
+func TestGOOS(t *testing.T) {
+	fmt.Println(runtime.GOOS)
 }
