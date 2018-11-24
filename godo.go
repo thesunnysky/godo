@@ -1,9 +1,11 @@
-package main
+package godo
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
+	cmdImpl "github.com/thesunnysky/godo/cmd/cmdImpl1"
+)
 
-func main() {
-
+func Run() {
 	var addCmd = &cobra.Command{
 		Use:     "add [jobs]",
 		Aliases: []string{"a"},
@@ -11,7 +13,7 @@ func main() {
 		Long:    "add [jobs]",
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			addCmdImpl(args)
+			cmdImpl.AddCmdImpl(args)
 		},
 	}
 
@@ -22,7 +24,7 @@ func main() {
 		Long:    "del [jobs_index]",
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			delCmdImpl(args)
+			cmdImpl.DelCmdImpl(args)
 		},
 	}
 
@@ -33,7 +35,7 @@ func main() {
 		Long:    "list jobs",
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			listCmdImpl(args)
+			cmdImpl.ListCmdImpl(args)
 		},
 	}
 
@@ -42,11 +44,12 @@ func main() {
 		Aliases: []string{"t"},
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			cleanCmdImpl(args)
+			cmdImpl.CleanCmdImpl(args)
 		},
 	}
 
 	var rootCmd = &cobra.Command{Use: "godo"}
 	rootCmd.AddCommand(addCmd, delCmd, listCmd, cleanCmd)
 	rootCmd.Execute()
+
 }

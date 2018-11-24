@@ -1,4 +1,4 @@
-package main
+package config
 
 const CONFIG_FILE = ".godo/config"
 
@@ -8,5 +8,6 @@ const CONFIG_FILE_DO_NOT_EXIST = 2
 
 const FILE_MAKS = 0666
 
-const UNIX_LINE_SEPARATOR = '\n'
+const LINE_SEPARATOR = '\n'
 
+const DEFAULT_LINE_CACHE = 50
