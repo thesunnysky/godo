@@ -1,11 +1,11 @@
-package godo
+package main
 
 import (
 	"github.com/spf13/cobra"
-	cmdImpl "github.com/thesunnysky/godo/cmd/cmdImpl1"
+	cmdImpl "github.com/thesunnysky/godo/cmd/cmdImplNorm"
 )
 
-func Run() {
+func main() {
 	var addCmd = &cobra.Command{
 		Use:     "add [jobs]",
 		Aliases: []string{"a"},

@@ -1,17 +1,17 @@
-package cmdImpl1
+package cmdImplMmp
 
 import (
 	"bufio"
 	"bytes"
 	"fmt"
 	"github.com/thesunnysky/godo/config"
-	"github.com/thesunnysky/godo/mmpfile"
 	"github.com/thesunnysky/godo/normalfile"
 	"io"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 )
 
 type File struct {
@@ -75,47 +75,72 @@ func DelCmdImpl(args []string) {
 
 	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDWR, config.FILE_MAKS)
 	defer f.Close()
-	file := mmpfile.File{File: f}
 	if err != nil {
 		panic(err)
 	}
 
-	fileData := file.ReadDataFile(f)
-	for _, index := range num {
-		idx := index - 1
-		if (idx < 0) || (idx > len(fileData)-1) {
-			continue
-		}
-		fileData[idx] = string('\n')
+	fileInfo, err := f.Stat()
+	if err != nil {
+		os.Exit(1)
+	}
+	size := int(fileInfo.Size())
+
+	mMap, err := syscall.Mmap(int(f.Fd()), 0, size, syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED)
+	defer syscall.Munmap(mMap)
+	if err != nil {
+		os.Exit(1)
 	}
 
-	file.RewriteFile(f, fileData)
+	lineNum := 0
+	for begin, end := 0, 0; end < len(mMap); end++ {
+		if mMap[end] == byte(config.LINE_SEPARATOR) {
+			lineNum++
+			if intContains(num, lineNum) {
+				//write null to deleted line
+				writeNull(mMap, begin, end)
+			}
+			begin = end + 1
+		}
+	}
 
 	fmt.Println("delete task successfully")
 }
 
 func ListCmdImpl(args []string) {
 	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDONLY, config.FILE_MAKS)
+	defer f.Close()
 	if err != nil {
 		panic(err)
 	}
-	br := bufio.NewReader(f)
+
+	fileInfo, err := f.Stat()
+	if err != nil {
+		os.Exit(1)
+	}
+	size := int(fileInfo.Size())
+
+	mMap, err := syscall.Mmap(int(f.Fd()), 0, size, syscall.PROT_READ, syscall.MAP_SHARED)
+	defer syscall.Munmap(mMap)
+	if err != nil {
+		os.Exit(1)
+	}
+
 	var index int
-	for {
-		str, err := br.ReadString('\n')
-		if err == io.EOF {
-			break
-		}
-		index++
-		if !isBlankLine(str) {
-			fmt.Printf("%d. %s", index, str)
+	for begin, end := 0, 0; end < len(mMap); end++ {
+		if mMap[end] == byte(config.LINE_SEPARATOR) {
+			index++
+			str := string(mMap[begin:end])
+			if !isBlankLine(str) {
+				fmt.Printf("%d. %s\n", index, str)
+			}
+			begin = end + 1
 		}
 	}
-	defer f.Close()
 }
 
 func CleanCmdImpl(args []string) {
 	f, err := os.OpenFile(dataFile, os.O_RDWR, 0666)
+	defer f.Close()
 	if err != nil {
 		panic(err)
 	}
@@ -125,7 +150,8 @@ func CleanCmdImpl(args []string) {
 	br := bufio.NewReader(file.File)
 	fileData := make([]string, 0)
 	for {
-		str, err := br.ReadString('\n')
+		str, err := br.ReadString(config.LINE_SEPARATOR)
+		fmt.Printf("str:%s, len:%d", str, len(str))
 		if err == io.EOF {
 			break
 		}
@@ -135,9 +161,9 @@ func CleanCmdImpl(args []string) {
 		}
 	}
 
-	//rewrite task myfile
-	file.RewriteFile(f, fileData)
-	defer f.Close()
+	//rewrite task file
+	file.RewriteFile(file.File, fileData)
+	_ = file.File.Sync()
 
 	fmt.Println("tidy task myfile successfully")
 }
@@ -161,4 +187,20 @@ func pathExist(path string) bool {
 		return false
 	}
 	return true
+}
+
+func writeNull(data []byte, begin, end int) {
+	for i := begin; i < end; i++ {
+		data[i] = byte(0)
+	}
+}
+
+func intContains(intArray []int, target int) bool {
+	for _, value := range intArray {
+		if value == target {
+			return true
+		}
+	}
+	return false
+
 }

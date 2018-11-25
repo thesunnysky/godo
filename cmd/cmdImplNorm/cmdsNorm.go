@@ -1,4 +1,4 @@
-package cmdImpl2
+package cmdImplNorm
 
 import (
 	"bufio"
@@ -55,7 +55,7 @@ func initDataFile() {
 
 var r, _ = regexp.Compile("[[:alnum:]]")
 
-func addCmdImpl(args []string) {
+func AddCmdImpl(args []string) {
 	var buf bytes.Buffer
 	for _, str := range args {
 		buf.WriteString(str)
@@ -73,7 +73,7 @@ func addCmdImpl(args []string) {
 	fmt.Println("task add successfully")
 }
 
-func delCmdImpl(args []string) {
+func DelCmdImpl(args []string) {
 	num := make([]int, len(args))
 	for _, str := range args {
 		i, err := strconv.Atoi(str)
@@ -106,7 +106,7 @@ func delCmdImpl(args []string) {
 	fmt.Println("delete task successfully")
 }
 
-func listCmdImpl(args []string) {
+func ListCmdImpl(args []string) {
 	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDONLY, config.FILE_MAKS)
 	if err != nil {
 		panic(err)
@@ -126,7 +126,7 @@ func listCmdImpl(args []string) {
 	defer f.Close()
 }
 
-func cleanCmdImpl(args []string) {
+func CleanCmdImpl(args []string) {
 	f, err := os.OpenFile(dataFile, os.O_RDWR, 0666)
 	if err != nil {
 		panic(err)
