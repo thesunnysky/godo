@@ -162,7 +162,7 @@ func CleanCmdImpl(args []string) {
 	}
 
 	//rewrite task file
-	file.RewriteFile(file.File, fileData)
+	file.RewriteFile(fileData)
 	_ = file.File.Sync()
 
 	fmt.Println("tidy task myfile successfully")

@@ -19,6 +19,7 @@ func (File) AppendNewLine(f *os.File, data []byte) {
 	}
 }
 
+//todo there is bub!!!
 func (File) RewriteFile(f *os.File, data []string) {
 	if err := f.Truncate(0); err != nil {
 		panic(err)

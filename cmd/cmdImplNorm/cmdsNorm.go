@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/thesunnysky/godo/config"
-	"github.com/thesunnysky/godo/mmpfile"
 	"github.com/thesunnysky/godo/normalfile"
 	"io"
 	"os"
@@ -87,12 +86,12 @@ func DelCmdImpl(args []string) {
 
 	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDWR, config.FILE_MAKS)
 	defer f.Close()
-	file := mmpfile.File{File: f}
+	file := normalfile.File{File: f}
 	if err != nil {
 		panic(err)
 	}
 
-	fileData := file.ReadDataFile(f)
+	fileData := file.ReadFile()
 	for _, index := range num {
 		idx := index - 1
 		if (idx < 0) || (idx > len(fileData)-1) {
@@ -101,7 +100,7 @@ func DelCmdImpl(args []string) {
 		fileData[idx] = string('\n')
 	}
 
-	file.RewriteFile(f, fileData)
+	file.RewriteFile(fileData)
 
 	fmt.Println("delete task successfully")
 }
@@ -111,10 +110,12 @@ func ListCmdImpl(args []string) {
 	if err != nil {
 		panic(err)
 	}
+	defer f.Close()
+
 	br := bufio.NewReader(f)
 	var index int
 	for {
-		str, err := br.ReadString('\n')
+		str, err := br.ReadString(config.LINE_SEPARATOR)
 		if err == io.EOF {
 			break
 		}
@@ -123,21 +124,21 @@ func ListCmdImpl(args []string) {
 			fmt.Printf("%d. %s", index, str)
 		}
 	}
-	defer f.Close()
 }
 
-func CleanCmdImpl(args []string) {
+func TidyCmdImpl(args []string) {
 	f, err := os.OpenFile(dataFile, os.O_RDWR, 0666)
 	if err != nil {
 		panic(err)
 	}
 	file := normalfile.File{File: f}
+	defer file.Close()
 
-	//read and filter task myfile
+	//read and filter task file
 	br := bufio.NewReader(file.File)
-	fileData := make([]string, 0)
+	var fileData []string
 	for {
-		str, err := br.ReadString('\n')
+		str, err := br.ReadString(config.LINE_SEPARATOR)
 		if err == io.EOF {
 			break
 		}
@@ -148,8 +149,7 @@ func CleanCmdImpl(args []string) {
 	}
 
 	//rewrite task myfile
-	file.RewriteFile(f, fileData)
-	defer f.Close()
+	file.RewriteFile(fileData)
 
 	fmt.Println("tidy task myfile successfully")
 }

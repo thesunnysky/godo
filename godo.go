@@ -44,7 +44,7 @@ func main() {
 		Aliases: []string{"t"},
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdImpl.CleanCmdImpl(args)
+			cmdImpl.TidyCmdImpl(args)
 		},
 	}
 

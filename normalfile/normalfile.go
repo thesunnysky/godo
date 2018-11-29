@@ -2,7 +2,6 @@ package normalfile
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/thesunnysky/godo/config"
 	"io"
 	"os"
@@ -12,12 +11,12 @@ type File struct {
 	File *os.File
 }
 
-func (File) ReadDataFile(f *os.File) []string {
-	br := bufio.NewReader(f)
-	fileData := make([]string, 0)
+func (f File) ReadFile() []string {
+	br := bufio.NewReader(f.File)
+	var fileData []string
 	for {
 		str, err := br.ReadString(config.LINE_SEPARATOR)
-		if err == io.EOF {
+		if err != nil || err == io.EOF {
 			break
 		}
 		fileData = append(fileData, str)
@@ -34,16 +33,21 @@ func (File) AppendNewLine(f *os.File, data []byte) {
 	}
 }
 
-func (File) RewriteFile(f *os.File, data []string) {
-	fmt.Println(data)
-	if err := f.Truncate(0); err != nil {
+func (f File) RewriteFile(data []string) {
+	if err := f.File.Truncate(0); err != nil {
 		panic(err)
 	}
-	f.Sync()
+	_, err := f.File.Seek(0, 0)
+	if err != nil {
+		panic(err)
+	}
 	for _, line := range data {
-		fmt.Println(line)
-		if _, err := f.WriteString(line); err != nil {
+		if _, err := f.File.WriteString(line); err != nil {
 			panic(err)
 		}
 	}
+}
+
+func (f File) Close() {
+	f.File.Close()
 }
