@@ -24,11 +24,11 @@ func (f File) ReadFile() []string {
 	return fileData
 }
 
-func (File) AppendNewLine(f *os.File, data []byte) {
+func (f File) AppendNewLine(data []byte) {
 	b := byte('\n')
 	data = append(data, b)
 
-	if _, err := f.Write(data); err != nil {
+	if _, err := f.File.Write(data); err != nil {
 		panic(err)
 	}
 }

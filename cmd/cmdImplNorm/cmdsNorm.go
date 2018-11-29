@@ -65,9 +65,10 @@ func AddCmdImpl(args []string) {
 	if err != nil {
 		panic(err)
 	}
-
-	appendNewLine(f, buf.Bytes())
 	defer f.Close()
+
+	file := normalfile.File{File: f}
+	file.AppendNewLine(buf.Bytes())
 
 	fmt.Println("task add successfully")
 }
@@ -156,15 +157,6 @@ func TidyCmdImpl(args []string) {
 
 func isBlankLine(str string) bool {
 	return !r.MatchString(str)
-}
-
-func appendNewLine(f *os.File, data []byte) {
-	b := byte('\n')
-	data = append(data, b)
-
-	if _, err := f.Write(data); err != nil {
-		panic(err)
-	}
 }
 
 func pathExist(path string) bool {
