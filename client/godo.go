@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	cmdImpl "github.com/thesunnysky/godo/cmd/cmdImplNorm"
+	cmdImpl "github.com/thesunnysky/godo/cmd"
 )
 
 func main() {
@@ -48,8 +48,27 @@ func main() {
 		},
 	}
 
-	var rootCmd = &cobra.Command{Use: "godo"}
-	rootCmd.AddCommand(addCmd, delCmd, listCmd, cleanCmd)
-	rootCmd.Execute()
+	var pushCmd = &cobra.Command{
+		Use:     "push",
+		Aliases: []string{"ps"},
+		Args:    cobra.MinimumNArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			cmdImpl.PushCmd(args)
 
+		},
+	}
+
+	var pullCmd = &cobra.Command{
+		Use:     "pull",
+		Aliases: []string{"pl"},
+		Args:    cobra.MinimumNArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			cmdImpl.PullCmd(args)
+
+		},
+	}
+
+	var rootCmd = &cobra.Command{Use: "godo"}
+	rootCmd.AddCommand(addCmd, delCmd, listCmd, cleanCmd, pushCmd, pullCmd)
+	rootCmd.Execute()
 }

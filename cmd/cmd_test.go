@@ -44,6 +44,16 @@ func TestTidyNormCmds(t *testing.T) {
 	cmdImplNorm.TidyCmdImpl(args)
 }
 
+func TestPushNormCmds(t *testing.T) {
+	args := []string{}
+	cmdImplNorm.PushCmd(args)
+}
+
+func TestPullNormCmds(t *testing.T) {
+	args := []string{}
+	cmdImplNorm.PullCmd(args)
+}
+
 /*func TestMmapReadFile(t *testing.T) {
 	f, err := os.OpenFile(dataFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, config.FILE_MAKS)
 	defer f.Close()

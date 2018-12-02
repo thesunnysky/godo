@@ -1,4 +1,4 @@
-package cmdImplNorm
+package cmd
 
 import (
 	"bufio"
@@ -6,50 +6,26 @@ import (
 	"fmt"
 	"github.com/thesunnysky/godo/config"
 	"github.com/thesunnysky/godo/normalfile"
+	"github.com/thesunnysky/godo/util"
 	"io"
+	"io/ioutil"
 	"os"
 	"regexp"
-	"runtime"
 	"strconv"
-	"strings"
 )
 
 type File struct {
 	File *os.File
 }
 
-var dataFile string
-var lineSeparator byte
+var dataFile, privateKeyFile, publicKeyFile string
+
+var dataFile2 = "/tmp/godo.dat2"
 
 func init() {
-	initLineSeparator()
-
-	initDataFile()
-}
-
-func initLineSeparator() {
-	lineSeparator = byte(config.LINE_SEPARATOR)
-}
-
-func initDataFile() {
-	homeDir := os.Getenv("HOME")
-	configFile := homeDir + "/" + config.CONFIG_FILE
-	if !pathExist(configFile) {
-		fmt.Printf("config myfile:$HOME/%s do not exist\n", config.CONFIG_FILE)
-		os.Exit(config.CONFIG_FILE_DO_NOT_EXIST)
-	}
-	f, err := os.Open(configFile)
-	if err != nil {
-		panic(nil)
-	}
-	defer f.Close()
-
-	dataFile, err = bufio.NewReader(f).ReadString(config.LINE_SEPARATOR)
-	if err != nil {
-		panic(err)
-	}
-
-	dataFile = strings.TrimSpace(dataFile)
+	dataFile = config.CONF.DataFile
+	privateKeyFile = config.CONF.PrivateKeyFile
+	publicKeyFile = config.CONF.PublicKeyFile
 }
 
 var r, _ = regexp.Compile("[[:alnum:]]")
@@ -152,21 +128,45 @@ func TidyCmdImpl(args []string) {
 	//rewrite task myfile
 	file.RewriteFile(fileData)
 
-	fmt.Println("tidy task myfile successfully")
+	fmt.Println("tidy task file successfully")
 }
 
 func isBlankLine(str string) bool {
 	return !r.MatchString(str)
 }
 
-func pathExist(path string) bool {
-	_, err := os.Stat(path)
-	if err != nil && os.IsNotExist(err) {
-		return false
+func PushCmd(args []string) {
+	data, err := ioutil.ReadFile(dataFile)
+	if err != nil {
+		panic(err)
 	}
-	return true
-}
+	encryptedData, err := util.RsaEncrypt(data)
+	if err != nil {
+		panic(err)
+	}
 
-func osType() string {
-	return runtime.GOOS
+	//todo create a new file and then rename to target file
+	if err := ioutil.WriteFile(dataFile2, encryptedData, config.FILE_MAKS);
+		err != nil {
+		panic(err)
+	}
+
+	fmt.Println("push task file successfully")
+}
+func PullCmd(args []string) {
+	data, err := ioutil.ReadFile(dataFile2)
+	if err != nil {
+		panic(err)
+	}
+	encryptedData, err := util.RsaDecrypt(data)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := ioutil.WriteFile(dataFile, encryptedData, config.FILE_MAKS);
+		err != nil {
+		panic(err)
+	}
+
+	fmt.Println("pull task file successfully")
 }
