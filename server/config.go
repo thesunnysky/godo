@@ -10,11 +10,6 @@ import (
 	"os"
 )
 
-//godo-server consts
-const (
-	GodoDataFile = "GodoDataFile"
-)
-
 const ConfigFile = ".godo/server.json"
 
 type Config struct {
