@@ -8,22 +8,26 @@ import (
 	"os"
 )
 
-const CONFIG_FILE = ".godo/config.json"
+//godo client consts
+const (
+	CONFIG_FILE              = ".godo/config.json"
+	INVALID_PARAMETER_VALUE  = 1
+	CONFIG_FILE_DO_NOT_EXIST = 2
+	FILE_MAKS                = 0666
+	LINE_SEPARATOR           = '\n'
+	DEFAULT_LINE_CACHE       = 50
+)
 
-const INVALID_PARAMETER_VALUE = 1
-
-const CONFIG_FILE_DO_NOT_EXIST = 2
-
-const FILE_MAKS = 0666
-
-const LINE_SEPARATOR = '\n'
-
-const DEFAULT_LINE_CACHE = 50
+//godo-server consts
+const (
+	GODO_DATA_FILE = "GodoDataFile"
+)
 
 type Config struct {
 	DataFile       string `json:"DataFile"`
 	PrivateKeyFile string `json:"PrivateKeyFile"`
 	PublicKeyFile  string `json:"PublicKeyFile"`
+	GodoServerUrl  string `json:"GodoServerUrl"`
 }
 
 func init() {

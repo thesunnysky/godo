@@ -9,7 +9,7 @@ install-client:
 	@GOPATH=$(GOPATH) GOBIN=$(GOPATH)/bin go install client/godo.go
 
 install-server:
-	@GOPATH=$(GOPATH) GOBIN=$(GOPATH)/bin go install servers/server.go
+	@GOPATH=$(GOPATH) GOBIN=$(GOPATH)/bin go install server/server.go
 
 install: install-client install-server
 
