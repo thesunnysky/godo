@@ -8,7 +8,15 @@ import (
 	"os"
 )
 
+var serverConfig *ServerConfig
+
 func Run() {
+	var err error
+	serverConfig, err = NewConfig()
+	if err != nil {
+		panic(err)
+	}
+
 	http.HandleFunc("/upload", uploadHandle)
 	log.Fatal(http.ListenAndServe(":9090", nil))
 }
@@ -24,7 +32,7 @@ func uploadHandle(w http.ResponseWriter, r *http.Request) {
 	defer formFile.Close()
 
 	// 创建保存文件
-	destFile, err := os.Create("." + "/" + header.Filename)
+	destFile, err := os.Create(serverConfig.DataDir + "/" + header.Filename)
 	if err != nil {
 		log.Printf("Create failed: %s\n", err)
 		return

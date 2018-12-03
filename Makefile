@@ -2,17 +2,32 @@ GOFILES=$(wildcard *.go)
 
 default: build
 
-build:
-	go build -v -o ./godo  ./client
+build: clean-bin build-client build-server
 
-install-client:
-	@GOPATH=$(GOPATH) GOBIN=$(GOPATH)/bin go install client/godo.go
+install-client: build-client
+	@GOPATH=$(GOPATH) GOBIN=$(GOPATH)/bin go install ./cmd/client/godo.go
 
-install-server:
-	@GOPATH=$(GOPATH) GOBIN=$(GOPATH)/bin go install server/server.go
+build-server: clean-server
+	go build -v -o ./bin/godo-server ./cmd/server
 
-install: install-client install-server
+build-client: clean-client
+	go build -v -o ./bin/godo ./cmd/client
 
+install: clean-bin install-client build-server
+
+clean-bin:
+	@mkdir -p bin
+	@rm -f bin/*
+
+clean-server:
+	@mkdir -p bin
+	@rm -f bin/godo-server*
+
+clean-client:
+	@mkdir -p bin
+	@rm -f bin/godo
+
+clean: clean-bin
 
 #run: build
 #	./_bin/snake-game

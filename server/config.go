@@ -14,17 +14,18 @@ const (
 	GODO_DATA_FILE = "GodoDataFile"
 )
 
-const CONFIG_FILE = ""
+const CONFIG_FILE = ".godo/server.json"
 
-type Config struct {
+type ServerConfig struct {
+	DataDir string `json:"DataDir"`
 }
 
-func NewConfig() (*Config, error) {
-	config := &Config{}
+func NewConfig() (*ServerConfig, error) {
+	config := &ServerConfig{}
 	homeDir := os.Getenv("HOME")
 	configFile := homeDir + "/" + CONFIG_FILE
 	if !pathExist(configFile) {
-		str := fmt.Sprintf("config myfile:$HOME/%s do not exist\n", CONFIG_FILE)
+		str := fmt.Sprintf("config file:$HOME/%s do not exist\n", CONFIG_FILE)
 		return nil, errors.New(str)
 	}
 	f, err := os.Open(configFile)

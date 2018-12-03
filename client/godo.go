@@ -1,11 +1,10 @@
-package main
+package godo
 
 import (
 	"github.com/spf13/cobra"
-	cmdImpl "github.com/thesunnysky/godo/cmd"
 )
 
-func main() {
+func Run() {
 	var addCmd = &cobra.Command{
 		Use:     "add [jobs]",
 		Aliases: []string{"a"},
@@ -13,7 +12,7 @@ func main() {
 		Long:    "add [jobs]",
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdImpl.AddCmdImpl(args)
+			AddCmdImpl(args)
 		},
 	}
 
@@ -24,7 +23,7 @@ func main() {
 		Long:    "del [jobs_index]",
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdImpl.DelCmdImpl(args)
+			DelCmdImpl(args)
 		},
 	}
 
@@ -35,7 +34,7 @@ func main() {
 		Long:    "list jobs",
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdImpl.ListCmdImpl(args)
+			ListCmdImpl(args)
 		},
 	}
 
@@ -44,7 +43,7 @@ func main() {
 		Aliases: []string{"t"},
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdImpl.TidyCmdImpl(args)
+			TidyCmdImpl(args)
 		},
 	}
 
@@ -53,7 +52,7 @@ func main() {
 		Aliases: []string{"ps"},
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdImpl.PushCmd(args)
+			PushCmd(args)
 
 		},
 	}
@@ -63,7 +62,7 @@ func main() {
 		Aliases: []string{"pl"},
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdImpl.PullCmd(args)
+			PullCmd(args)
 
 		},
 	}
