@@ -1,8 +1,8 @@
 package server
 
+import "C"
 import (
 	"bytes"
-	"github.com/thesunnysky/godo/config"
 	"io"
 	"log"
 	"mime/multipart"
@@ -10,9 +10,17 @@ import (
 	"os"
 )
 
-var GODO_SERVER_PUSH_URL = config.CONF.GodoServerUrl
+type ApiClient struct {
+	Url string
+}
 
-func PostFile(filename, fieldname string) error {
+func NewApiClient(url string) *ApiClient {
+	client := &ApiClient{}
+	client.Url = url
+	return client
+}
+
+func (client *ApiClient) PostFile(filename, fieldname string) error {
 	// 创建表单文件
 	// CreateFormFile 用来创建表单，第一个参数是字段名，第二个参数是文件名
 	buf := new(bytes.Buffer)
@@ -44,7 +52,7 @@ func PostFile(filename, fieldname string) error {
 		return err
 	}
 
-	_, err = http.Post(GODO_SERVER_PUSH_URL+"/upload", contentType, buf)
+	_, err = http.Post(client.Url+"/upload", contentType, buf)
 	if err != nil {
 		log.Fatalf("Post failed: %s\n", err)
 		return err
@@ -52,6 +60,6 @@ func PostFile(filename, fieldname string) error {
 	return nil
 }
 
-func GetFile(filename, fieldname string) error {
+func (client *ApiClient) GetFile(filename, fieldname string) error {
 	return nil
 }

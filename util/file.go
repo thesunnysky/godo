@@ -2,7 +2,7 @@ package util
 
 import (
 	"bufio"
-	"github.com/thesunnysky/godo/config"
+	"github.com/thesunnysky/godo/consts"
 	"io"
 	"os"
 )
@@ -15,7 +15,7 @@ func (f File) ReadFile() []string {
 	br := bufio.NewReader(f.File)
 	var fileData []string
 	for {
-		str, err := br.ReadString(config.LINE_SEPARATOR)
+		str, err := br.ReadString(consts.LINE_SEPARATOR)
 		if err != nil || err == io.EOF {
 			break
 		}
@@ -50,4 +50,19 @@ func (f File) RewriteFile(data []string) {
 
 func (f File) Close() {
 	f.File.Close()
+}
+
+func PathExist(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil && os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+func CreateDirIsNotExist(path string) error {
+	if PathExist(path) {
+		return nil
+	}
+	return os.MkdirAll(path, 0711)
 }

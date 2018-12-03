@@ -1,27 +1,17 @@
-package config
+package godo
 
 import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/thesunnysky/godo/consts"
 	"io/ioutil"
 	"os"
 )
 
-//godo client consts
-const (
-	CONFIG_FILE              = ".godo/config.json"
-	INVALID_PARAMETER_VALUE  = 1
-	CONFIG_FILE_DO_NOT_EXIST = 2
-	FILE_MAKS                = 0666
-	LINE_SEPARATOR           = '\n'
-	DEFAULT_LINE_CACHE       = 50
-)
+var ConfigFile = ".godo/config.json"
 
-//godo-server consts
-const (
-	GODO_DATA_FILE = "GodoDataFile"
-)
+
 
 type Config struct {
 	DataFile       string `json:"DataFile"`
@@ -34,14 +24,14 @@ func init() {
 	initDataFile()
 }
 
-var CONF = &Config{}
+var ClientConfig = &Config{}
 
 func initDataFile() {
 	homeDir := os.Getenv("HOME")
-	configFile := homeDir + "/" + CONFIG_FILE
+	configFile := homeDir + "/" + ConfigFile
 	if !pathExist(configFile) {
-		fmt.Printf("config myfile:$HOME/%s do not exist\n", CONFIG_FILE)
-		os.Exit(CONFIG_FILE_DO_NOT_EXIST)
+		fmt.Printf("config myfile:$HOME/%s do not exist\n", ConfigFile)
+		os.Exit(consts.CONFIG_FILE_DO_NOT_EXIST)
 	}
 	f, err := os.Open(configFile)
 	if err != nil {
@@ -54,7 +44,7 @@ func initDataFile() {
 		panic(err)
 	}
 
-	if err := json.Unmarshal(configData, CONF); err != nil {
+	if err := json.Unmarshal(configData, ClientConfig); err != nil {
 		panic(err)
 	}
 }

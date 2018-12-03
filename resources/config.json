@@ -1,0 +1,6 @@
+{
+  "DataFile": "/home/sun/data/godo/godo.dat",
+  "PublicKeyFile": "/home/sun/.config/rsa_pem/rsa_pub.pem",
+  "PrivateKeyFile": "/home/sun/.config/rsa_pem/rsa_pri.pem"
+}
+

@@ -1,22 +1,17 @@
 package server
 
 import (
-	"github.com/thesunnysky/godo/config"
+	"github.com/thesunnysky/godo/consts"
+	"github.com/thesunnysky/godo/util"
 	"io"
 	"log"
 	"net/http"
 	"os"
 )
 
-var serverConfig *ServerConfig
+var serverConfig = ServerConfig
 
 func Run() {
-	var err error
-	serverConfig, err = NewConfig()
-	if err != nil {
-		panic(err)
-	}
-
 	http.HandleFunc("/upload", uploadHandle)
 	log.Fatal(http.ListenAndServe(":9090", nil))
 }
@@ -24,13 +19,17 @@ func Run() {
 func uploadHandle(w http.ResponseWriter, r *http.Request) {
 
 	// 根据字段名获取表单文件
-	formFile, header, err := r.FormFile(config.GODO_DATA_FILE)
+	formFile, header, err := r.FormFile(consts.GODO_DATA_FILE)
 	if err != nil {
 		log.Printf("Get form file failed: %s\n", err)
 		return
 	}
 	defer formFile.Close()
 
+	if err := util.CreateDirIsNotExist(serverConfig.DataDir); err != nil {
+		log.Printf("create data dir error:%s\n", err)
+		return
+	}
 	// 创建保存文件
 	destFile, err := os.Create(serverConfig.DataDir + "/" + header.Filename)
 	if err != nil {

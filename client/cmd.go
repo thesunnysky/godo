@@ -1,11 +1,11 @@
 package godo
 
+import "C"
 import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/thesunnysky/godo/config"
-	"github.com/thesunnysky/godo/util"
+	"github.com/thesunnysky/godo/consts"
 	normalfile "github.com/thesunnysky/godo/util"
 	"io"
 	"io/ioutil"
@@ -23,9 +23,9 @@ var dataFile, privateKeyFile, publicKeyFile string
 var dataFile2 = "/tmp/godo.dat2"
 
 func init() {
-	dataFile = config.CONF.DataFile
-	privateKeyFile = config.CONF.PrivateKeyFile
-	publicKeyFile = config.CONF.PublicKeyFile
+	dataFile = ClientConfig.DataFile
+	privateKeyFile = ClientConfig.PrivateKeyFile
+	publicKeyFile = ClientConfig.PublicKeyFile
 }
 
 var r, _ = regexp.Compile("[[:alnum:]]")
@@ -37,7 +37,7 @@ func AddCmdImpl(args []string) {
 		buf.WriteByte(' ')
 	}
 
-	f, err := os.OpenFile(dataFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, config.FILE_MAKS)
+	f, err := os.OpenFile(dataFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, consts.FILE_MAKS)
 	if err != nil {
 		panic(err)
 	}
@@ -55,13 +55,13 @@ func DelCmdImpl(args []string) {
 		i, err := strconv.Atoi(str)
 		if err != nil {
 			fmt.Printf("invalid parameter value:%s\n", str)
-			os.Exit(config.INVALID_PARAMETER_VALUE)
+			os.Exit(consts.INVALID_PARAMETER_VALUE)
 		} else {
 			num = append(num, i)
 		}
 	}
 
-	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDWR, config.FILE_MAKS)
+	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDWR, consts.FILE_MAKS)
 	defer f.Close()
 	file := normalfile.File{File: f}
 	if err != nil {
@@ -83,7 +83,7 @@ func DelCmdImpl(args []string) {
 }
 
 func ListCmdImpl(args []string) {
-	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDONLY, config.FILE_MAKS)
+	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDONLY, consts.FILE_MAKS)
 	if err != nil {
 		panic(err)
 	}
@@ -92,7 +92,7 @@ func ListCmdImpl(args []string) {
 	br := bufio.NewReader(f)
 	var index int
 	for {
-		str, err := br.ReadString(config.LINE_SEPARATOR)
+		str, err := br.ReadString(consts.LINE_SEPARATOR)
 		if err == io.EOF {
 			break
 		}
@@ -115,7 +115,7 @@ func TidyCmdImpl(args []string) {
 	br := bufio.NewReader(file.File)
 	var fileData []string
 	for {
-		str, err := br.ReadString(config.LINE_SEPARATOR)
+		str, err := br.ReadString(consts.LINE_SEPARATOR)
 		if err == io.EOF {
 			break
 		}
@@ -140,13 +140,13 @@ func PushCmd(args []string) {
 	if err != nil {
 		panic(err)
 	}
-	encryptedData, err := util.RsaEncrypt(data)
+	encryptedData, err := RsaEncrypt(data)
 	if err != nil {
 		panic(err)
 	}
 
 	//todo create a new file and then rename to target file
-	if err := ioutil.WriteFile(dataFile2, encryptedData, config.FILE_MAKS);
+	if err := ioutil.WriteFile(dataFile2, encryptedData, consts.FILE_MAKS);
 		err != nil {
 		panic(err)
 	}
@@ -158,12 +158,12 @@ func PullCmd(args []string) {
 	if err != nil {
 		panic(err)
 	}
-	encryptedData, err := util.RsaDecrypt(data)
+	encryptedData, err := RsaDecrypt(data)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := ioutil.WriteFile(dataFile, encryptedData, config.FILE_MAKS);
+	if err := ioutil.WriteFile(dataFile, encryptedData, consts.FILE_MAKS);
 		err != nil {
 		panic(err)
 	}

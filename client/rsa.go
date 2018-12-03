@@ -1,4 +1,4 @@
-package util
+package godo
 
 import (
 	"crypto/rand"
@@ -7,18 +7,14 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/thesunnysky/godo/config"
 	"io/ioutil"
 )
 
 var privateKey, publicKey []byte
 
-var publicKeyFile string
-var privateKeyFile string
-
 func init() {
-	publicKeyFile = config.CONF.PublicKeyFile
-	privateKeyFile = config.CONF.PrivateKeyFile
+	publicKeyFile = ClientConfig.PublicKeyFile
+	privateKeyFile = ClientConfig.PrivateKeyFile
 
 	var err error
 	publicKey, err = ioutil.ReadFile(publicKeyFile)

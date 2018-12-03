@@ -1,4 +1,4 @@
-package config
+package godo
 
 import (
 	"fmt"
@@ -6,5 +6,5 @@ import (
 )
 
 func TestInitConfig(t *testing.T) {
-	fmt.Println(CONF.DataFile)
+	fmt.Println(ClientConfig.DataFile)
 }

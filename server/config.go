@@ -5,28 +5,34 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/thesunnysky/godo/util"
 	"io/ioutil"
 	"os"
 )
 
 //godo-server consts
 const (
-	GODO_DATA_FILE = "GodoDataFile"
+	GodoDataFile = "GodoDataFile"
 )
 
-const CONFIG_FILE = ".godo/server.json"
+const ConfigFile = ".godo/server.json"
 
-type ServerConfig struct {
+type Config struct {
 	DataDir string `json:"DataDir"`
 }
 
-func NewConfig() (*ServerConfig, error) {
-	config := &ServerConfig{}
+var ServerConfig = &Config{}
+
+func init() {
+	_ = initConfig()
+}
+
+func initConfig() error {
 	homeDir := os.Getenv("HOME")
-	configFile := homeDir + "/" + CONFIG_FILE
-	if !pathExist(configFile) {
-		str := fmt.Sprintf("config file:$HOME/%s do not exist\n", CONFIG_FILE)
-		return nil, errors.New(str)
+	configFile := homeDir + "/" + ConfigFile
+	if !util.PathExist(configFile) {
+		str := fmt.Sprintf("config file:$HOME/%s do not exist\n", ConfigFile)
+		return errors.New(str)
 	}
 	f, err := os.Open(configFile)
 	if err != nil {
@@ -35,19 +41,11 @@ func NewConfig() (*ServerConfig, error) {
 
 	configData, err := ioutil.ReadAll(bufio.NewReader(f))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if err := json.Unmarshal(configData, config); err != nil {
-		return nil, err
+	if err := json.Unmarshal(configData, ServerConfig); err != nil {
+		return err
 	}
-	return config, nil
-}
-
-func pathExist(path string) bool {
-	_, err := os.Stat(path)
-	if err != nil && os.IsNotExist(err) {
-		return false
-	}
-	return true
+	return nil
 }
