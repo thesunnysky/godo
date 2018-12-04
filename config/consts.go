@@ -1,4 +1,4 @@
-package config
+package consts
 
 //godo client config
 const (

@@ -16,18 +16,10 @@ import (
 	"strings"
 )
 
-type File struct {
-	File *os.File
-}
-
-var dataFile, privateKeyFile, publicKeyFile string
-
-var dataFile2 = "/tmp/godo.dat2"
+var dataFile string
 
 func init() {
-	dataFile = config.ClientConfig.DataFile
-	privateKeyFile = config.ClientConfig.PrivateKeyFile
-	publicKeyFile = config.ClientConfig.PublicKeyFile
+	dataFile = ClientConfig.DataFile
 }
 
 var r, _ = regexp.Compile("[[:alnum:]]")
@@ -39,7 +31,7 @@ func AddCmdImpl(args []string) {
 		buf.WriteByte(' ')
 	}
 
-	f, err := os.OpenFile(dataFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, config.FILE_MAKS)
+	f, err := os.OpenFile(dataFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, consts.FILE_MAKS)
 	if err != nil {
 		panic(err)
 	}
@@ -57,13 +49,13 @@ func DelCmdImpl(args []string) {
 		i, err := strconv.Atoi(str)
 		if err != nil {
 			fmt.Printf("invalid parameter value:%s\n", str)
-			os.Exit(config.INVALID_PARAMETER_VALUE)
+			os.Exit(consts.INVALID_PARAMETER_VALUE)
 		} else {
 			num = append(num, i)
 		}
 	}
 
-	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDWR, config.FILE_MAKS)
+	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDWR, consts.FILE_MAKS)
 	defer f.Close()
 	file := util.File{File: f}
 	if err != nil {
@@ -85,7 +77,7 @@ func DelCmdImpl(args []string) {
 }
 
 func ListCmdImpl(args []string) {
-	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDONLY, config.FILE_MAKS)
+	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDONLY, consts.FILE_MAKS)
 	if err != nil {
 		panic(err)
 	}
@@ -94,7 +86,7 @@ func ListCmdImpl(args []string) {
 	br := bufio.NewReader(f)
 	var index int
 	for {
-		str, err := br.ReadString(config.LINE_SEPARATOR)
+		str, err := br.ReadString(consts.LINE_SEPARATOR)
 		if err == io.EOF {
 			break
 		}
@@ -117,7 +109,7 @@ func TidyCmdImpl(args []string) {
 	br := bufio.NewReader(file.File)
 	var fileData []string
 	for {
-		str, err := br.ReadString(config.LINE_SEPARATOR)
+		str, err := br.ReadString(consts.LINE_SEPARATOR)
 		if err == io.EOF {
 			break
 		}
@@ -138,32 +130,33 @@ func isBlankLine(str string) bool {
 }
 
 func PullCmd(args []string) {
-	filename := config.ClientConfig.DataFile
+	filename := ClientConfig.DataFile
 	index := strings.LastIndex(filename, "/")
 	if index == -1 {
 		index = 0
 	}
 	fileName := filename[index:]
 
-	apiClient := server.ApiClient{Url: config.ClientConfig.GodoServerUrl}
+	apiClient := server.ApiClient{Url: ClientConfig.GodoServerUrl}
 	reader, err := apiClient.DownloadFile(fileName)
 	if err != nil {
-		log.Printf("download file:%s successfullly\n", filename)
+		log.Printf("download file:%s error:%s\n", fileName, err)
 		os.Exit(-1)
 	}
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.Printf("read data from response error:%s\n", err)
 	}
-	decryptedData, err := util.RsaDecrypt(data)
+	aesUtil := util.Aes{Key: ClientConfig.AesGCMKey, Nonce: ClientConfig.AesGCMNonce}
+	decryptedData, err := aesUtil.AesGcmDecrypt(data)
 	if err != nil {
 		log.Printf("decrypt data error:%s\n", err)
 	}
 
 	//write download data to tempFile
-	tempFile := "temp" + config.ClientConfig.DataFile
-	targetFile := config.ClientConfig.DataFile
-	f, err := os.OpenFile(tempFile, os.O_WRONLY|os.O_TRUNC, config.FILE_MAKS)
+	tempFile := ClientConfig.DataFile + ".tmp"
+	targetFile := ClientConfig.DataFile
+	f, err := os.OpenFile(tempFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, consts.FILE_MAKS)
 	if err != nil {
 		log.Printf("open file error:%s\n", err)
 	}
@@ -173,11 +166,15 @@ func PullCmd(args []string) {
 		os.Exit(-1)
 	}
 
-	//remove current task file
-	if err := os.Remove(targetFile); err != nil {
-		log.Printf("remove old task file error%s\n", err)
-		os.Exit(-1)
+	// rename tempFile to targetFile
+	if util.PathExist(targetFile) {
+		backupFile := targetFile + ".bak"
+		if err := os.Rename(targetFile, backupFile); err != nil {
+			log.Printf("remove old task file error%s\n", err)
+			os.Exit(-1)
+		}
 	}
+
 	// rename tempFile to targetFile
 	if err := os.Rename(tempFile, targetFile); err != nil {
 		log.Printf("remove old task file error%s\n", err)
@@ -188,8 +185,9 @@ func PullCmd(args []string) {
 
 func PushCmd(args []string) {
 
-	apiClient := server.ApiClient{Url: config.ClientConfig.GodoServerUrl}
-	if err := apiClient.PostFile(config.GODO_DATA_FILE, config.ClientConfig.DataFile);
+	apiClient := server.ApiClient{Url: ClientConfig.GodoServerUrl,
+		Key: ClientConfig.AesGCMKey, Nonce: ClientConfig.AesGCMNonce}
+	if err := apiClient.PostFile(consts.GODO_DATA_FILE, ClientConfig.DataFile);
 		err != nil {
 		fmt.Printf("push task file to server error:%s\n", err)
 		os.Exit(-1)

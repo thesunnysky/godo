@@ -15,7 +15,7 @@ func (f File) ReadFile() []string {
 	br := bufio.NewReader(f.File)
 	var fileData []string
 	for {
-		str, err := br.ReadString(config.LINE_SEPARATOR)
+		str, err := br.ReadString(consts.LINE_SEPARATOR)
 		if err != nil || err == io.EOF {
 			break
 		}

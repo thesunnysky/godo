@@ -1,9 +1,10 @@
-package config
+package godo
 
 import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/thesunnysky/godo/config"
 	"io/ioutil"
 	"os"
 )
@@ -11,10 +12,10 @@ import (
 var ConfigFile = ".godo/config.json"
 
 type Config struct {
-	DataFile       string `json:"DataFile"`
-	PrivateKeyFile string `json:"PrivateKeyFile"`
-	PublicKeyFile  string `json:"PublicKeyFile"`
-	GodoServerUrl  string `json:"GodoServerUrl"`
+	DataFile      string `json:"DataFile"`
+	AesGCMKey     string `json:"AesGCMKey"`
+	AesGCMNonce   string `json:"AesGCMNonce"`
+	GodoServerUrl string `json:"GodoServerUrl"`
 }
 
 func init() {
@@ -28,7 +29,7 @@ func initDataFile() {
 	configFile := homeDir + "/" + ConfigFile
 	if !pathExist(configFile) {
 		fmt.Printf("config file:$HOME/%s do not exist\n", ConfigFile)
-		os.Exit(CONFIG_FILE_DO_NOT_EXIST)
+		os.Exit(consts.CONFIG_FILE_DO_NOT_EXIST)
 	}
 	f, err := os.Open(configFile)
 	if err != nil {

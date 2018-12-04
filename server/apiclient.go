@@ -3,7 +3,6 @@ package server
 import "C"
 import (
 	"bytes"
-	"encoding/base64"
 	"github.com/thesunnysky/godo/util"
 	"io"
 	"io/ioutil"
@@ -14,12 +13,16 @@ import (
 )
 
 type ApiClient struct {
-	Url string
+	Url   string
+	Key   string
+	Nonce string
 }
 
-func NewApiClient(url string) *ApiClient {
+func NewApiClient(url, key, nonce string) *ApiClient {
 	client := &ApiClient{}
 	client.Url = url
+	client.Key = key
+	client.Nonce = nonce
 	return client
 }
 
@@ -48,8 +51,9 @@ func (client *ApiClient) PostFile(fieldname, filename string) error {
 		return err
 	}
 
-	base64.NewEncoder()
-	encryptData, err := util.RsaEncrypt(srcFileData)
+	//encryptData, err := util.RsaEncrypt(srcFileData)
+	aesUtil := util.Aes{Key: client.Key, Nonce: client.Nonce}
+	encryptData, err := aesUtil.AesGcmDecrypt(srcFileData)
 	if err != nil {
 		log.Fatalf("Encrypt data error:%s\n", err)
 		return err
@@ -78,7 +82,6 @@ func (client *ApiClient) PostFile(fieldname, filename string) error {
 func (client *ApiClient) DownloadFile(filename string) (io.Reader, error) {
 	r, err := http.Get(client.Url + "/download/" + filename)
 	if err != nil {
-		log.Printf("failed to download file\n:%s", filename)
 		return nil, err
 	}
 	return r.Body, nil

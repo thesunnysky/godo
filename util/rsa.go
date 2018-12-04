@@ -6,16 +6,14 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"github.com/thesunnysky/godo/config"
-	"io/ioutil"
 )
 
 var privateKey, publicKey []byte
 var publicKeyFile, privateKeyFile string
 
-func init() {
-	publicKeyFile = config.ClientConfig.PublicKeyFile
-	privateKeyFile = config.ClientConfig.PrivateKeyFile
+/*func init() {
+	//publicKeyFile = config.ClientConfig.PublicKeyFile
+	//privateKeyFile = config.ClientConfig.PrivateKeyFile
 
 	var err error
 	publicKey, err = ioutil.ReadFile(publicKeyFile)
@@ -26,8 +24,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-}
-
+}*/
 
 // 加密
 func RsaEncrypt(origData []byte) ([]byte, error) {
