@@ -1,17 +1,14 @@
-package godo
+package config
 
 import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/thesunnysky/godo/consts"
 	"io/ioutil"
 	"os"
 )
 
 var ConfigFile = ".godo/config.json"
-
-
 
 type Config struct {
 	DataFile       string `json:"DataFile"`
@@ -30,8 +27,8 @@ func initDataFile() {
 	homeDir := os.Getenv("HOME")
 	configFile := homeDir + "/" + ConfigFile
 	if !pathExist(configFile) {
-		fmt.Printf("config myfile:$HOME/%s do not exist\n", ConfigFile)
-		os.Exit(consts.CONFIG_FILE_DO_NOT_EXIST)
+		fmt.Printf("config file:$HOME/%s do not exist\n", ConfigFile)
+		os.Exit(CONFIG_FILE_DO_NOT_EXIST)
 	}
 	f, err := os.Open(configFile)
 	if err != nil {

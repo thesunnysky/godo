@@ -1,4 +1,4 @@
-package godo
+package config
 
 import (
 	"fmt"

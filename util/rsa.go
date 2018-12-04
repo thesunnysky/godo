@@ -1,4 +1,4 @@
-package godo
+package util
 
 import (
 	"crypto/rand"
@@ -6,15 +6,16 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
+	"github.com/thesunnysky/godo/config"
 	"io/ioutil"
 )
 
 var privateKey, publicKey []byte
+var publicKeyFile, privateKeyFile string
 
 func init() {
-	publicKeyFile = ClientConfig.PublicKeyFile
-	privateKeyFile = ClientConfig.PrivateKeyFile
+	publicKeyFile = config.ClientConfig.PublicKeyFile
+	privateKeyFile = config.ClientConfig.PrivateKeyFile
 
 	var err error
 	publicKey, err = ioutil.ReadFile(publicKeyFile)
@@ -27,19 +28,6 @@ func init() {
 	}
 }
 
-func main() {
-	var data []byte
-	var err error
-	data, err = RsaEncrypt([]byte("fyxichen"))
-	if err != nil {
-		panic(err)
-	}
-	origData, err := RsaDecrypt(data)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(string(origData))
-}
 
 // 加密
 func RsaEncrypt(origData []byte) ([]byte, error) {

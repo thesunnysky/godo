@@ -1,6 +1,6 @@
-package consts
+package config
 
-//godo client consts
+//godo client config
 const (
 	INVALID_PARAMETER_VALUE  = 1
 	CONFIG_FILE_DO_NOT_EXIST = 2
@@ -8,7 +8,7 @@ const (
 	LINE_SEPARATOR           = '\n'
 )
 
-//godo-server consts
+//godo-server config
 const (
 	GODO_DATA_FILE = "GodoDataFile"
 )

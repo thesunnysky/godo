@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/thesunnysky/godo/consts"
+	"github.com/thesunnysky/godo/config"
 	"github.com/thesunnysky/godo/util"
 	"io"
 	"log"
@@ -27,7 +27,7 @@ func Run() {
 func uploadHandle(w http.ResponseWriter, r *http.Request) {
 
 	// 根据字段名获取表单文件
-	formFile, header, err := r.FormFile(consts.GODO_DATA_FILE)
+	formFile, header, err := r.FormFile(config.GODO_DATA_FILE)
 	if err != nil {
 		log.Printf("Get form file failed: %s\n", err)
 		return

@@ -3,11 +3,13 @@ package server
 import "C"
 import (
 	"bytes"
+	"encoding/base64"
+	"github.com/thesunnysky/godo/util"
 	"io"
+	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
-	"os"
 	"strings"
 )
 
@@ -40,14 +42,19 @@ func (client *ApiClient) PostFile(fieldname, filename string) error {
 	}
 
 	// 从文件读取数据，写入表单
-	srcFile, err := os.Open(filename)
+	srcFileData, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Fatalf("Open source file failed: %s\n", err)
 		return err
 	}
-	defer srcFile.Close()
-	_, err = io.Copy(formFile, srcFile)
+
+	base64.NewEncoder()
+	encryptData, err := util.RsaEncrypt(srcFileData)
 	if err != nil {
+		log.Fatalf("Encrypt data error:%s\n", err)
+		return err
+	}
+	if _, err := formFile.Write(encryptData); err != nil {
 		log.Fatalf("Write to form file falied: %s\n", err)
 		return err
 	}

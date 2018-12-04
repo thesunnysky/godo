@@ -2,7 +2,7 @@ package util
 
 import (
 	"bufio"
-	"github.com/thesunnysky/godo/consts"
+	"github.com/thesunnysky/godo/config"
 	"io"
 	"os"
 )
@@ -15,7 +15,7 @@ func (f File) ReadFile() []string {
 	br := bufio.NewReader(f.File)
 	var fileData []string
 	for {
-		str, err := br.ReadString(consts.LINE_SEPARATOR)
+		str, err := br.ReadString(config.LINE_SEPARATOR)
 		if err != nil || err == io.EOF {
 			break
 		}
