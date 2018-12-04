@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type ApiClient struct {
@@ -20,12 +21,19 @@ func NewApiClient(url string) *ApiClient {
 	return client
 }
 
-func (client *ApiClient) PostFile(filename, fieldname string) error {
+func (client *ApiClient) PostFile(fieldname, filename string) error {
+	index := strings.LastIndex(filename, "/")
+	if index == -1 {
+		index = 0
+	}
+	fileName := filename[index:]
+
 	// 创建表单文件
 	// CreateFormFile 用来创建表单，第一个参数是字段名，第二个参数是文件名
 	buf := new(bytes.Buffer)
 	writer := multipart.NewWriter(buf)
-	formFile, err := writer.CreateFormFile(fieldname, filename)
+	formFile, err := writer.CreateFormFile(fieldname, fileName)
+
 	if err != nil {
 		log.Fatalf("Create form file failed: %s\n", err)
 		return err
@@ -34,7 +42,7 @@ func (client *ApiClient) PostFile(filename, fieldname string) error {
 	// 从文件读取数据，写入表单
 	srcFile, err := os.Open(filename)
 	if err != nil {
-		log.Fatalf("%Open source file failed: s\n", err)
+		log.Fatalf("Open source file failed: %s\n", err)
 		return err
 	}
 	defer srcFile.Close()
@@ -60,6 +68,11 @@ func (client *ApiClient) PostFile(filename, fieldname string) error {
 	return nil
 }
 
-func (client *ApiClient) GetFile(filename, fieldname string) error {
-	return nil
+func (client *ApiClient) DownloadFile(filename string) (io.Reader, error) {
+	r, err := http.Get(client.Url + "/download/" + filename)
+	if err != nil {
+		log.Printf("failed to download file\n:%s", filename)
+		return nil, err
+	}
+	return r.Body, nil
 }

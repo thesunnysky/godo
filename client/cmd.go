@@ -6,12 +6,15 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/thesunnysky/godo/consts"
+	"github.com/thesunnysky/godo/server"
 	normalfile "github.com/thesunnysky/godo/util"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 type File struct {
@@ -135,37 +138,48 @@ func isBlankLine(str string) bool {
 	return !r.MatchString(str)
 }
 
-func PushCmd(args []string) {
-	data, err := ioutil.ReadFile(dataFile)
-	if err != nil {
-		panic(err)
-	}
-	encryptedData, err := RsaEncrypt(data)
-	if err != nil {
-		panic(err)
-	}
-
-	//todo create a new file and then rename to target file
-	if err := ioutil.WriteFile(dataFile2, encryptedData, consts.FILE_MAKS);
-		err != nil {
-		panic(err)
-	}
-
-	fmt.Println("push task file successfully")
-}
 func PullCmd(args []string) {
-	data, err := ioutil.ReadFile(dataFile2)
-	if err != nil {
-		panic(err)
+	filename := ClientConfig.DataFile
+	index := strings.LastIndex(filename, "/")
+	if index == -1 {
+		index = 0
 	}
-	encryptedData, err := RsaDecrypt(data)
+	fileName := filename[index:]
+
+	apiClient := server.ApiClient{Url: ClientConfig.GodoServerUrl}
+	reader, err := apiClient.DownloadFile(fileName)
 	if err != nil {
-		panic(err)
+		log.Printf("download file:%s successfullly\n", filename)
+		os.Exit(-1)
+	}
+	data, err := ioutil.ReadAll(reader)
+	if err != nil {
+		log.Printf("read data from response error:%s\n", err)
+	}
+	decrypteData, err := RsaDecrypt(data)
+	if err != nil {
+		log.Printf("decrypt data error:%s\n", err)
 	}
 
-	if err := ioutil.WriteFile(dataFile, encryptedData, consts.FILE_MAKS);
+	f, err := os.OpenFile(ClientConfig.DataFile, os.O_WRONLY|os.O_TRUNC, consts.FILE_MAKS)
+	if err != nil {
+		log.Printf("open file error:%s\n", err)
+	}
+	defer f.Close()
+	if _, err := f.Write(decrypteData); err != nil {
+		log.Printf("open file error:%s\n", err)
+		os.Exit(-1)
+	}
+	fmt.Println("pull task file successfully")
+}
+
+func PushCmd(args []string) {
+
+	apiClient := server.ApiClient{Url: ClientConfig.GodoServerUrl}
+	if err := apiClient.PostFile(consts.GODO_DATA_FILE, ClientConfig.DataFile);
 		err != nil {
-		panic(err)
+		fmt.Printf("push task file to server error:%s\n", err)
+		os.Exit(-1)
 	}
 
 	fmt.Println("pull task file successfully")
