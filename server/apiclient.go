@@ -26,7 +26,7 @@ func NewApiClient(url, key, nonce string) *ApiClient {
 	return client
 }
 
-func (client *ApiClient) PostFile(fieldname, filename string) error {
+func (client *ApiClient) PushFile(fieldname, filename string) error {
 	index := strings.LastIndex(filename, "/")
 	if index == -1 {
 		index = 0
@@ -52,7 +52,7 @@ func (client *ApiClient) PostFile(fieldname, filename string) error {
 	}
 
 	//encryptData, err := util.RsaEncrypt(srcFileData)
-	aesUtil := util.Aes{Key: client.Key, Nonce: client.Nonce}
+	aesUtil := util.Aes{Key: []byte(client.Key), Nonce: []byte(client.Nonce)}
 	encryptData, err := aesUtil.GcmEncrypt(srcFileData)
 	if err != nil {
 		log.Fatalf("Encrypt data error:%s\n", err)
@@ -79,7 +79,7 @@ func (client *ApiClient) PostFile(fieldname, filename string) error {
 	return nil
 }
 
-func (client *ApiClient) DownloadFile(filename string) (io.Reader, error) {
+func (client *ApiClient) PullFile(filename string) (io.Reader, error) {
 	r, err := http.Get(client.Url + "/download/" + filename)
 	if err != nil {
 		return nil, err

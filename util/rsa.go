@@ -8,27 +8,14 @@ import (
 	"errors"
 )
 
-var privateKey, publicKey []byte
-var publicKeyFile, privateKeyFile string
-
-/*func init() {
-	//publicKeyFile = consts.ClientConfig.PublicKeyFile
-	//privateKeyFile = consts.ClientConfig.PrivateKeyFile
-
-	var err error
-	publicKey, err = ioutil.ReadFile(publicKeyFile)
-	if err != nil {
-		panic(err)
-	}
-	privateKey, err = ioutil.ReadFile(privateKeyFile)
-	if err != nil {
-		panic(err)
-	}
-}*/
+type Rsa struct {
+	PublicKey  []byte
+	PrivateKey []byte
+}
 
 // 加密
-func RsaEncrypt(origData []byte) ([]byte, error) {
-	block, _ := pem.Decode(publicKey)
+func (r *Rsa) RsaEncrypt(origData []byte) ([]byte, error) {
+	block, _ := pem.Decode(r.PublicKey)
 	if block == nil {
 		return nil, errors.New("public key error")
 	}
@@ -41,10 +28,10 @@ func RsaEncrypt(origData []byte) ([]byte, error) {
 }
 
 // 解密
-func RsaDecrypt(cipherText []byte) ([]byte, error) {
-	block, _ := pem.Decode(privateKey)
+func (r *Rsa) RsaDecrypt(cipherText []byte) ([]byte, error) {
+	block, _ := pem.Decode(r.PrivateKey)
 	if block == nil {
-		return nil, errors.New("private key error!")
+		return nil, errors.New("private key error")
 	}
 	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {

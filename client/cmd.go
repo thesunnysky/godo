@@ -138,7 +138,7 @@ func PullCmd(args []string) {
 	fileName := filename[index:]
 
 	apiClient := server.ApiClient{Url: ClientConfig.GodoServerUrl}
-	reader, err := apiClient.DownloadFile(fileName)
+	reader, err := apiClient.PullFile(fileName)
 	if err != nil {
 		log.Printf("download file:%s error:%s\n", fileName, err)
 		os.Exit(-1)
@@ -147,7 +147,7 @@ func PullCmd(args []string) {
 	if err != nil {
 		log.Printf("read data from response error:%s\n", err)
 	}
-	aesUtil := util.Aes{Key: ClientConfig.AesGCMKey, Nonce: ClientConfig.AesGCMNonce}
+	aesUtil := util.Aes{Key: []byte(ClientConfig.AesGCMKey), Nonce: []byte(ClientConfig.AesGCMNonce)}
 	decryptedData, err := aesUtil.GcmDecrypt(data)
 	if err != nil {
 		log.Printf("decrypt data error:%s\n", err)
@@ -187,7 +187,7 @@ func PushCmd(args []string) {
 
 	apiClient := server.ApiClient{Url: ClientConfig.GodoServerUrl,
 		Key: ClientConfig.AesGCMKey, Nonce: ClientConfig.AesGCMNonce}
-	if err := apiClient.PostFile(consts.GODO_DATA_FILE, ClientConfig.DataFile);
+	if err := apiClient.PushFile(consts.GODO_DATA_FILE, ClientConfig.DataFile);
 		err != nil {
 		fmt.Printf("push task file to server error:%s\n", err)
 		os.Exit(-1)
