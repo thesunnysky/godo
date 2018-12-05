@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/thesunnysky/godo/config"
+	"github.com/thesunnysky/godo/consts"
 	"github.com/thesunnysky/godo/server"
 	"github.com/thesunnysky/godo/util"
 	"io"

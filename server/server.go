@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/thesunnysky/godo/config"
+	"github.com/thesunnysky/godo/consts"
 	"github.com/thesunnysky/godo/util"
 	"io"
 	"log"

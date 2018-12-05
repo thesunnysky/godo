@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/thesunnysky/godo/config"
+	"github.com/thesunnysky/godo/consts"
 	"io/ioutil"
 	"os"
 )
@@ -18,17 +18,13 @@ type Config struct {
 	GodoServerUrl string `json:"GodoServerUrl"`
 }
 
-func init() {
-	initDataFile()
-}
+var ClientConfig = initDataFile()
 
-var ClientConfig = &Config{}
-
-func initDataFile() {
+func initDataFile() *Config {
 	homeDir := os.Getenv("HOME")
 	configFile := homeDir + "/" + ConfigFile
 	if !pathExist(configFile) {
-		fmt.Printf("config file:$HOME/%s do not exist\n", ConfigFile)
+		fmt.Printf("consts file:$HOME/%s do not exist\n", ConfigFile)
 		os.Exit(consts.CONFIG_FILE_DO_NOT_EXIST)
 	}
 	f, err := os.Open(configFile)
@@ -42,9 +38,11 @@ func initDataFile() {
 		panic(err)
 	}
 
+	ClientConfig := &Config{}
 	if err := json.Unmarshal(configData, ClientConfig); err != nil {
 		panic(err)
 	}
+	return ClientConfig
 }
 
 func pathExist(path string) bool {

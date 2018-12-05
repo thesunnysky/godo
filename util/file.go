@@ -2,7 +2,7 @@ package util
 
 import (
 	"bufio"
-	"github.com/thesunnysky/godo/config"
+	"github.com/thesunnysky/godo/consts"
 	"io"
 	"os"
 )

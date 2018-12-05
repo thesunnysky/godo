@@ -12,8 +12,8 @@ var privateKey, publicKey []byte
 var publicKeyFile, privateKeyFile string
 
 /*func init() {
-	//publicKeyFile = config.ClientConfig.PublicKeyFile
-	//privateKeyFile = config.ClientConfig.PrivateKeyFile
+	//publicKeyFile = consts.ClientConfig.PublicKeyFile
+	//privateKeyFile = consts.ClientConfig.PrivateKeyFile
 
 	var err error
 	publicKey, err = ioutil.ReadFile(publicKeyFile)

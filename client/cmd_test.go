@@ -35,7 +35,7 @@ func TestPullNormCmds(t *testing.T) {
 }
 
 /*func TestMmapReadFile(t *testing.T) {
-	f, err := os.OpenFile(dataFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, config.FILE_MAKS)
+	f, err := os.OpenFile(dataFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, consts.FILE_MAKS)
 	defer f.Close()
 	if err != nil {
 		panic(err)
