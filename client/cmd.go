@@ -11,9 +11,11 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var dataFile string
@@ -194,4 +196,49 @@ func PushCmd(args []string) {
 	}
 
 	fmt.Println("pull task file successfully")
+}
+
+func GitCmd(args []string) {
+	cmd := exec.Command("git", args...)
+
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
+
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+	//todo
+	cmd.Dir = "/home/sun/github/todo"
+
+	if err := cmd.Start(); err != nil {
+		_ = fmt.Errorf("git command start error:%s\n", err)
+	}
+
+	done := make(chan error)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	timeout := 30 * time.Second
+	var err error
+	select {
+	case <-time.After(timeout):
+		if cmd.Process != nil && cmd.ProcessState != nil && !cmd.ProcessState.Exited() {
+			if err := cmd.Process.Kill(); err != nil {
+				log.Printf("command process kill error:%s\n", err)
+				os.Exit(-1)
+			}
+		}
+		<-done
+		log.Println("command execute timeout")
+
+	case err = <-done:
+	}
+
+	if err != nil {
+		log.Printf("command execute error:%s\n", err)
+		log.Println(string(stderr.Bytes()))
+	}
+
+	log.Print(string(stderr.Bytes()))
+	log.Print(string(stdout.Bytes()))
 }

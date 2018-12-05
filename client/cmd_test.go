@@ -34,6 +34,11 @@ func TestPullNormCmds(t *testing.T) {
 	PullCmd(args)
 }
 
+func TestGitCmd(t *testing.T) {
+	args := []string{"status"}
+	GitCmd(args)
+}
+
 /*func TestMmapReadFile(t *testing.T) {
 	f, err := os.OpenFile(dataFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, consts.FILE_MAKS)
 	defer f.Close()

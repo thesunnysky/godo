@@ -3,7 +3,7 @@ package util
 import (
 	"bytes"
 	"crypto/rand"
-	"errors"
+	"encoding/binary"
 	"github.com/CodisLabs/codis/pkg/utils/log"
 	"io"
 )
@@ -41,22 +41,97 @@ func (hyper *HyperEncrypt) Encrypt(plaintext []byte) ([]byte, error) {
 	}
 
 	var buffer bytes.Buffer
+	keySize := len(cipherAesKey)
+	keybs := make([]byte, 4)
+	binary.BigEndian.PutUint32(keybs, uint32(keySize))
+	buffer.Write(keybs)
 	buffer.Write(cipherAesKey)
-	buffer.WriteByte('\n')
+
+	nonceSize := len(cipherAesNonce)
+	noncebs := make([]byte, 4)
+	binary.BigEndian.PutUint32(noncebs, uint32(nonceSize))
+	buffer.Write(keybs)
 	buffer.Write(cipherAesNonce)
-	buffer.WriteByte('\n')
+
+	dataSize := len(cipherText)
+	databs := make([]byte, 4)
+	binary.BigEndian.PutUint32(databs, uint32(dataSize))
+	buffer.Write(databs)
 	buffer.Write(cipherText)
 	return buffer.Bytes(), nil
 }
 
 func (hyper *HyperEncrypt) Decrypt(cipherData []byte) ([]byte, error) {
-	splitData := bytes.Split(cipherData, []byte{'\n'})
-	if len(splitData) != 3 {
-		return nil, errors.New("the composition of cipher data is invalid")
+	br := bytes.NewReader(cipherData)
+
+	//read aes key size
+	cipherAesKeySizeSlice := make([]byte, 4)
+	if _, err := br.Read(cipherAesKeySizeSlice); err != nil {
+		return nil, err
 	}
-	cipherAesKey := splitData[0]
-	cipherAesNonce := splitData[1]
-	cipherText := splitData[2]
+	//read aes key
+	cipherAesKeySize := binary.BigEndian.Uint32(cipherAesKeySizeSlice)
+	cipherAesKey := make([]byte, cipherAesKeySize)
+	if _, err := br.Read(cipherAesKey); err != nil {
+		return nil, err
+	}
+
+	//read aes nonce size
+	cipherAesNonceSizeSlice := make([]byte, 4)
+	if _, err := br.Read(cipherAesNonceSizeSlice); err != nil {
+		return nil, err
+	}
+	//read aes nonce
+	cipherAesNonceSize := binary.BigEndian.Uint32(cipherAesNonceSizeSlice)
+	cipherAesNonce := make([]byte, cipherAesNonceSize)
+	if _, err := br.Read(cipherAesNonce); err != nil {
+		return nil, err
+	}
+
+	//read aes nonce size
+	cipherAesTextSizeSlice := make([]byte, 4)
+	if _, err := br.Read(cipherAesTextSizeSlice); err != nil {
+		return nil, err
+	}
+	//read aes nonce
+	cipherAesTextSize := binary.BigEndian.Uint32(cipherAesTextSizeSlice)
+	cipherAesText := make([]byte, cipherAesTextSize)
+	if _, err := br.Read(cipherAesText); err != nil {
+		return nil, err
+	}
+
+	aesKey, err := hyper.Rsa.RsaDecrypt(cipherAesKey)
+	if err != nil {
+		return nil, err
+	}
+
+	aesNonce, err := hyper.Rsa.RsaDecrypt(cipherAesNonce)
+	if err != nil {
+		return nil, err
+	}
+
+	hyper.Aes.Key = aesKey
+	hyper.Aes.Nonce = aesNonce
+	plainText, err := hyper.Aes.GcmDecrypt(cipherAesText)
+	if err != nil {
+		return nil, err
+	}
+	return plainText, nil
+}
+
+/*func (hyper *HyperEncrypt) Decrypt2(cipherData []byte) ([]byte, error) {
+	aesKeyLen := binary.BigEndian.Uint32(cipherData[0:4])
+	aesKeyEndPos := 4 + aesKeyLen
+	cipherAesKey := cipherData[4:aesKeyEndPos]
+
+	aesNonceLen := binary.BigEndian.Uint32(cipherData[aesKeyEndPos : aesKeyEndPos+4])
+	aesNonceStartPos := aesKeyEndPos + 4
+	aesNonceEndPos := aesNonceStartPos + aesNonceLen
+	cipherAesNonce := cipherData[aesNonceStartPos:aesNonceEndPos]
+
+	cipherTextStartPos := aesNonceEndPos + 4
+	cipherText := cipherData[cipherTextStartPos:]
+
 	aesKey, err := hyper.Rsa.RsaDecrypt(cipherAesKey)
 	if err != nil {
 		return nil, err
@@ -74,7 +149,7 @@ func (hyper *HyperEncrypt) Decrypt(cipherData []byte) ([]byte, error) {
 		return nil, err
 	}
 	return plainText, nil
-}
+}*/
 
 func genAesKeyAndNonce() (key, nonce []byte) {
 	key = make([]byte, 32)

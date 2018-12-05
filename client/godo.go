@@ -53,7 +53,6 @@ func Run() {
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			PushCmd(args)
-
 		},
 	}
 
@@ -63,11 +62,19 @@ func Run() {
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			PullCmd(args)
+		},
+	}
 
+	var gitCmd = &cobra.Command{
+		Use:     "git",
+		Aliases: []string{"g"},
+		Args:    cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			GitCmd(args)
 		},
 	}
 
 	var rootCmd = &cobra.Command{Use: "godo"}
-	rootCmd.AddCommand(addCmd, delCmd, listCmd, cleanCmd, pushCmd, pullCmd)
+	rootCmd.AddCommand(addCmd, delCmd, listCmd, cleanCmd, pushCmd, pullCmd, gitCmd)
 	rootCmd.Execute()
 }
