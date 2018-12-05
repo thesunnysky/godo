@@ -148,7 +148,7 @@ func PullCmd(args []string) {
 		log.Printf("read data from response error:%s\n", err)
 	}
 	aesUtil := util.Aes{Key: ClientConfig.AesGCMKey, Nonce: ClientConfig.AesGCMNonce}
-	decryptedData, err := aesUtil.AesGcmDecrypt(data)
+	decryptedData, err := aesUtil.GcmDecrypt(data)
 	if err != nil {
 		log.Printf("decrypt data error:%s\n", err)
 	}

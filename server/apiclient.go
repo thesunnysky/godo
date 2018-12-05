@@ -53,7 +53,7 @@ func (client *ApiClient) PostFile(fieldname, filename string) error {
 
 	//encryptData, err := util.RsaEncrypt(srcFileData)
 	aesUtil := util.Aes{Key: client.Key, Nonce: client.Nonce}
-	encryptData, err := aesUtil.AesGcmDecrypt(srcFileData)
+	encryptData, err := aesUtil.GcmEncrypt(srcFileData)
 	if err != nil {
 		log.Fatalf("Encrypt data error:%s\n", err)
 		return err

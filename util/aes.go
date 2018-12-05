@@ -29,7 +29,7 @@ func (conf *Aes) GcmEncrypt(plaintext []byte) ([]byte, error) {
 	return aesgcm.Seal(nil, nonceBytes, plaintext, nil), nil
 }
 
-func (conf *Aes) AesGcmDecrypt(ciphertext []byte) ([]byte, error) {
+func (conf *Aes) GcmDecrypt(ciphertext []byte) ([]byte, error) {
 	keyBytes, _ := hex.DecodeString(conf.Key)
 	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
