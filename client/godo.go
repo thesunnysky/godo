@@ -2,9 +2,14 @@ package godo
 
 import (
 	"github.com/spf13/cobra"
+	"os"
+	"strings"
 )
 
+var g = &GitRepo{repoPath: ClientConfig.GithubRepo}
+
 func Run() {
+
 	var addCmd = &cobra.Command{
 		Use:     "add [jobs]",
 		Aliases: []string{"a"},
@@ -47,34 +52,104 @@ func Run() {
 		},
 	}
 
-	var pushCmd = &cobra.Command{
-		Use:     "push",
-		Aliases: []string{"ps"},
-		Args:    cobra.MinimumNArgs(0),
+	var pushServerCmd = &cobra.Command{
+		Use:  "push-server",
+		Args: cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			PushCmd(args)
+			PushServerCmd(args)
 		},
 	}
 
-	var pullCmd = &cobra.Command{
-		Use:     "pull",
-		Aliases: []string{"pl"},
-		Args:    cobra.MinimumNArgs(0),
+	var pullServerCmd = &cobra.Command{
+		Use:  "pull-server",
+		Args: cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			PullCmd(args)
+		},
+	}
+
+	var pushGitCmd = &cobra.Command{
+		Use:  "push",
+		Args: cobra.MinimumNArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			PushGitCmd(args)
+		},
+	}
+
+	var pullGitCmd = &cobra.Command{
+		Use:  "pull",
+		Args: cobra.MinimumNArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
 		},
 	}
 
 	var gitCmd = &cobra.Command{
 		Use:     "git",
 		Aliases: []string{"g"},
-		Args:    cobra.MinimumNArgs(1),
+		Args:    cobra.ArbitraryArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			GitCmd(args)
+			_ = g.GitCmd(os.Args[2:])
 		},
 	}
 
+	//todo encrypt task file and copy to git repo
+	var gitAddCmd = &cobra.Command{
+		Use:  "add",
+		Args: cobra.ArbitraryArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			var gitArgs []string
+			if addAll, _ := cmd.Flags().GetBool("all"); addAll {
+				gitArgs = []string{"add", "-A"}
+			} else {
+				gitArgs = args
+			}
+			_ = g.GitCmd(gitArgs)
+		},
+	}
+	gitAddCmd.Flags().BoolP("all", "A", false, "Add all")
+
+	var gitPushCmd = &cobra.Command{
+		Use:  "push",
+		Args: cobra.ArbitraryArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			_ = g.GitCmd(args)
+		},
+	}
+
+	var gitPullCmd = &cobra.Command{
+		Use:  "pull",
+		Args: cobra.ArbitraryArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			gitArgs := []string{"pull", "--rebase"}
+			_ = g.GitCmd(gitArgs)
+		},
+	}
+
+	var commitMsg string
+	var gitCommitCmd = &cobra.Command{
+		Use:     "commit",
+		Aliases: []string{"cm"},
+		Args:    cobra.ArbitraryArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			gitArgs := []string{"commit", "-m", "\"" + commitMsg + "\""}
+			_ = g.GitCmd(gitArgs)
+		},
+	}
+	gitCommitCmd.Flags().StringVarP(&commitMsg, "message", "m", "", "commit message")
+
+	var gitAddAndCommitCmd = &cobra.Command{
+		Use:  "cm",
+		Args: cobra.ArbitraryArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			message := strings.Join(args, " ")
+			gitArgs := []string{"commit", "-am", "\"" + message + "\""}
+			_ = g.GitCmd(gitArgs)
+		},
+	}
+
+	gitCmd.AddCommand(gitAddCmd, gitPushCmd, gitCommitCmd, gitPullCmd, gitAddAndCommitCmd)
+
 	var rootCmd = &cobra.Command{Use: "godo"}
-	rootCmd.AddCommand(addCmd, delCmd, listCmd, cleanCmd, pushCmd, pullCmd, gitCmd)
+	rootCmd.AddCommand(addCmd, delCmd, listCmd, cleanCmd, pushServerCmd, pullServerCmd, gitCmd, pushGitCmd, pullGitCmd)
 	rootCmd.Execute()
 }

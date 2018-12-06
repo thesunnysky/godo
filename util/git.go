@@ -55,7 +55,7 @@ func (g *Git) exec(args ...string) (stdout, stderr *bytes.Buffer, err error) {
 	cmd.Stderr = stderr
 	cmd.Dir = g.Repo
 
-	if err := cmd.Start(); err != nil {
+	if err = cmd.Start(); err != nil {
 		return
 	}
 
@@ -68,7 +68,7 @@ func (g *Git) exec(args ...string) (stdout, stderr *bytes.Buffer, err error) {
 	select {
 	case <-time.After(timeout):
 		if cmd.Process != nil && cmd.ProcessState != nil && !cmd.ProcessState.Exited() {
-			if err := cmd.Process.Kill(); err != nil {
+			if err = cmd.Process.Kill(); err != nil {
 				return
 			}
 		}

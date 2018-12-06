@@ -9,34 +9,34 @@ import (
 )
 
 type HyperEncrypt struct {
-	Rsa Rsa
-	Aes Aes
+	rsa Rsa
+	aes Aes
 }
 
 func NewHyperEncrypt(rsaPublicKey, rsaPrivateKey []byte) *HyperEncrypt {
 	rasConf := Rsa{PublicKey: rsaPublicKey, PrivateKey: rsaPrivateKey}
 	aesKey, aesNonce := genAesKeyAndNonce()
 	aesConf := Aes{Key: aesKey, Nonce: aesNonce}
-	hyperEncryptConf := &HyperEncrypt{Rsa: rasConf, Aes: aesConf}
+	hyperEncryptConf := &HyperEncrypt{rsa: rasConf, aes: aesConf}
 	return hyperEncryptConf
 }
 
 func (hyper *HyperEncrypt) Encrypt(plaintext []byte) ([]byte, error) {
-	cipherText, err := hyper.Aes.GcmEncrypt(plaintext)
+	cipherText, err := hyper.aes.GcmEncrypt(plaintext)
 	if err != nil {
-		log.Errorf("Aes encrypt data error:%s\n", err)
+		log.Errorf("aes encrypt data error:%s\n", err)
 		return nil, err
 	}
 
-	cipherAesKey, err := hyper.Rsa.RsaEncrypt(hyper.Aes.Key)
+	cipherAesKey, err := hyper.rsa.RsaEncrypt(hyper.aes.Key)
 	if err != nil {
-		log.Errorf("Rsa encrypt data error:%s\n", err)
+		log.Errorf("rsa encrypt data error:%s\n", err)
 		return nil, err
 	}
 
-	cipherAesNonce, err := hyper.Rsa.RsaEncrypt(hyper.Aes.Nonce)
+	cipherAesNonce, err := hyper.rsa.RsaEncrypt(hyper.aes.Nonce)
 	if err != nil {
-		log.Errorf("Rsa encrypt data error:%s\n", err)
+		log.Errorf("rsa encrypt data error:%s\n", err)
 		return nil, err
 	}
 
@@ -100,19 +100,19 @@ func (hyper *HyperEncrypt) Decrypt(cipherData []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	aesKey, err := hyper.Rsa.RsaDecrypt(cipherAesKey)
+	aesKey, err := hyper.rsa.RsaDecrypt(cipherAesKey)
 	if err != nil {
 		return nil, err
 	}
 
-	aesNonce, err := hyper.Rsa.RsaDecrypt(cipherAesNonce)
+	aesNonce, err := hyper.rsa.RsaDecrypt(cipherAesNonce)
 	if err != nil {
 		return nil, err
 	}
 
-	hyper.Aes.Key = aesKey
-	hyper.Aes.Nonce = aesNonce
-	plainText, err := hyper.Aes.GcmDecrypt(cipherAesText)
+	hyper.aes.Key = aesKey
+	hyper.aes.Nonce = aesNonce
+	plainText, err := hyper.aes.GcmDecrypt(cipherAesText)
 	if err != nil {
 		return nil, err
 	}
@@ -132,19 +132,19 @@ func (hyper *HyperEncrypt) Decrypt(cipherData []byte) ([]byte, error) {
 	cipherTextStartPos := aesNonceEndPos + 4
 	cipherText := cipherData[cipherTextStartPos:]
 
-	aesKey, err := hyper.Rsa.RsaDecrypt(cipherAesKey)
+	aesKey, err := hyper.rsa.RsaDecrypt(cipherAesKey)
 	if err != nil {
 		return nil, err
 	}
 
-	aesNonce, err := hyper.Rsa.RsaDecrypt(cipherAesNonce)
+	aesNonce, err := hyper.rsa.RsaDecrypt(cipherAesNonce)
 	if err != nil {
 		return nil, err
 	}
 
-	hyper.Aes.Key = aesKey
-	hyper.Aes.Nonce = aesNonce
-	plainText, err := hyper.Aes.GcmDecrypt(cipherText)
+	hyper.aes.Key = aesKey
+	hyper.aes.Nonce = aesNonce
+	plainText, err := hyper.aes.GcmDecrypt(cipherText)
 	if err != nil {
 		return nil, err
 	}

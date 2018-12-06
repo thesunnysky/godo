@@ -12,10 +12,21 @@ import (
 var ConfigFile = ".godo/config.json"
 
 type Config struct {
-	DataFile      string `json:"DataFile"`
-	AesGCMKey     string `json:"AesGCMKey"`
-	AesGCMNonce   string `json:"AesGCMNonce"`
-	GodoServerUrl string `json:"GodoServerUrl"`
+	DataFile      string       `json:"DataFile"`
+	RsaConfig     RsaConfig    `json:"RsaConfig"`
+	AesGCMConfig  AesGCMConfig `json:"AesGCMConfig"`
+	GodoServerUrl string       `json:"GodoServerUrl"`
+	GithubRepo    string       `json:"GithubRepo"`
+}
+
+type RsaConfig struct {
+	RsaPublicKeyFile  string `json:"RsaPublicKeyFile"`
+	RsaPrivateKeyFile string `json:"RsaPrivateKeyFile"`
+}
+
+type AesGCMConfig struct {
+	AesGCMKey   string `json:"AesGCMKey"`
+	AesGCMNonce string `json:"AesGCMNonce"`
 }
 
 var ClientConfig = initDataFile()

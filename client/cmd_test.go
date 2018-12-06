@@ -26,7 +26,7 @@ func TestTidyNormCmds(t *testing.T) {
 
 func TestPushNormCmds(t *testing.T) {
 	args := []string{}
-	PushCmd(args)
+	PushServerCmd(args)
 }
 
 func TestPullNormCmds(t *testing.T) {
@@ -36,7 +36,7 @@ func TestPullNormCmds(t *testing.T) {
 
 func TestGitCmd(t *testing.T) {
 	args := []string{"status"}
-	GitCmd(args)
+	_ = GitCmd(args)
 }
 
 /*func TestMmapReadFile(t *testing.T) {

@@ -9,7 +9,6 @@ import (
 	"github.com/thesunnysky/godo/util"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -22,6 +21,10 @@ var dataFile string
 
 func init() {
 	dataFile = ClientConfig.DataFile
+}
+
+type GitRepo struct {
+	repoPath string
 }
 
 var r, _ = regexp.Compile("[[:alnum:]]")
@@ -142,17 +145,18 @@ func PullCmd(args []string) {
 	apiClient := server.ApiClient{Url: ClientConfig.GodoServerUrl}
 	reader, err := apiClient.PullFile(fileName)
 	if err != nil {
-		log.Printf("download file:%s error:%s\n", fileName, err)
+		fmt.Printf("download file:%s error:%s\n", fileName, err)
 		os.Exit(-1)
 	}
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
-		log.Printf("read data from response error:%s\n", err)
+		fmt.Printf("read data from response error:%s\n", err)
 	}
-	aesUtil := util.Aes{Key: []byte(ClientConfig.AesGCMKey), Nonce: []byte(ClientConfig.AesGCMNonce)}
+	aesUtil := util.Aes{Key: []byte(ClientConfig.AesGCMConfig.AesGCMKey),
+		Nonce: []byte(ClientConfig.AesGCMConfig.AesGCMNonce)}
 	decryptedData, err := aesUtil.GcmDecrypt(data)
 	if err != nil {
-		log.Printf("decrypt data error:%s\n", err)
+		fmt.Printf("decrypt data error:%s\n", err)
 	}
 
 	//write download data to tempFile
@@ -160,11 +164,11 @@ func PullCmd(args []string) {
 	targetFile := ClientConfig.DataFile
 	f, err := os.OpenFile(tempFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, consts.FILE_MAKS)
 	if err != nil {
-		log.Printf("open file error:%s\n", err)
+		fmt.Printf("open file error:%s\n", err)
 	}
 	defer f.Close()
 	if _, err := f.Write(decryptedData); err != nil {
-		log.Printf("open file error:%s\n", err)
+		fmt.Printf("open file error:%s\n", err)
 		os.Exit(-1)
 	}
 
@@ -172,23 +176,24 @@ func PullCmd(args []string) {
 	if util.PathExist(targetFile) {
 		backupFile := targetFile + ".bak"
 		if err := os.Rename(targetFile, backupFile); err != nil {
-			log.Printf("remove old task file error%s\n", err)
+			fmt.Printf("remove old task file error%s\n", err)
 			os.Exit(-1)
 		}
 	}
 
 	// rename tempFile to targetFile
 	if err := os.Rename(tempFile, targetFile); err != nil {
-		log.Printf("remove old task file error%s\n", err)
+		fmt.Printf("remove old task file error%s\n", err)
 		os.Exit(-1)
 	}
 	fmt.Println("pull task file successfully")
 }
 
-func PushCmd(args []string) {
+func PushServerCmd(args []string) {
 
 	apiClient := server.ApiClient{Url: ClientConfig.GodoServerUrl,
-		Key: ClientConfig.AesGCMKey, Nonce: ClientConfig.AesGCMNonce}
+		Key:   ClientConfig.AesGCMConfig.AesGCMKey,
+		Nonce: ClientConfig.AesGCMConfig.AesGCMNonce}
 	if err := apiClient.PushFile(consts.GODO_DATA_FILE, ClientConfig.DataFile);
 		err != nil {
 		fmt.Printf("push task file to server error:%s\n", err)
@@ -198,7 +203,53 @@ func PushCmd(args []string) {
 	fmt.Println("pull task file successfully")
 }
 
-func GitCmd(args []string) {
+func PushGitCmd(args []string) {
+	textData, err := ioutil.ReadFile(dataFile)
+	if err != nil {
+		fmt.Printf("read godo data file error:%s\n", err)
+		os.Exit(-1)
+	}
+	publicKey, err := ioutil.ReadFile(ClientConfig.RsaConfig.RsaPublicKeyFile)
+	if err != nil {
+		fmt.Printf("read rsa public key file error:%s\n", err)
+		os.Exit(-1)
+	}
+
+	privateKey, err := ioutil.ReadFile(ClientConfig.RsaConfig.RsaPrivateKeyFile)
+	if err != nil {
+		fmt.Printf("read rsa private key file error:%s\n", err)
+		os.Exit(-1)
+	}
+
+	he := util.NewHyperEncrypt(publicKey, privateKey)
+	cipherData, err := he.Encrypt(textData)
+	if err != nil {
+		fmt.Printf("encryt task file error:%s\n", err)
+		os.Exit(-1)
+	}
+
+	gitFile := ClientConfig.GithubRepo + "/" + ClientConfig.DataFile
+	if err := ioutil.WriteFile(gitFile, cipherData, consts.FILE_MAKS);
+		err != nil {
+		fmt.Printf("write git file error:%s\n", gitFile)
+		os.Exit(-1)
+	}
+
+	gitCmArgs := []string{"commit", "-am", "\"\""}
+	if err := g.GitCmd(gitCmArgs); err != nil {
+		fmt.Printf("git commit -am error:%s\n", err)
+		os.Exit(-1)
+	}
+
+	gitPushArgs := []string{"push"}
+	if err := g.GitCmd(gitPushArgs); err != nil {
+		fmt.Printf("git push error:%s\n", err)
+		os.Exit(-1)
+	}
+	fmt.Printf("goto push sucessfully")
+}
+
+func (r *GitRepo) GitCmd(args []string) (err error) {
 	cmd := exec.Command("git", args...)
 
 	stdout := new(bytes.Buffer)
@@ -206,11 +257,10 @@ func GitCmd(args []string) {
 
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
-	//todo
-	cmd.Dir = "/home/sun/github/todo"
+	cmd.Dir = r.repoPath
 
-	if err := cmd.Start(); err != nil {
-		_ = fmt.Errorf("git command start error:%s\n", err)
+	if err = cmd.Start(); err != nil {
+		fmt.Printf("git command start error:%s\n", err)
 	}
 
 	done := make(chan error)
@@ -219,26 +269,31 @@ func GitCmd(args []string) {
 	}()
 
 	timeout := 30 * time.Second
-	var err error
 	select {
 	case <-time.After(timeout):
 		if cmd.Process != nil && cmd.ProcessState != nil && !cmd.ProcessState.Exited() {
-			if err := cmd.Process.Kill(); err != nil {
-				log.Printf("command process kill error:%s\n", err)
+			if err = cmd.Process.Kill(); err != nil {
+				fmt.Printf("command process kill error:%s\n", err)
 				os.Exit(-1)
 			}
 		}
 		<-done
-		log.Println("command execute timeout")
+		fmt.Println("command execute timeout")
 
 	case err = <-done:
 	}
 
 	if err != nil {
-		log.Printf("command execute error:%s\n", err)
-		log.Println(string(stderr.Bytes()))
+		fmt.Printf("[command execute error]: %s\n", err)
 	}
 
-	log.Print(string(stderr.Bytes()))
-	log.Print(string(stdout.Bytes()))
+	if stderr.Len() > 0 {
+		fmt.Print(string(stderr.Bytes()))
+	}
+
+	if stdout.Len() > 0 {
+		fmt.Print(string(stdout.Bytes()))
+	}
+
+	return err
 }
