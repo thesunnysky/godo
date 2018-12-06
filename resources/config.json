@@ -1,8 +1,15 @@
 {
   "DataFile": "/home/sun/data/godo/godo.dat",
-  "AesGCMKey": "64 length string",
-  "AesGCMNonce": "12 length string",
-  "GodoServerUrl": "http://xxx:9090"
+  "RsaConfig": {
+    "RsaPublicKeyFile": "/home/sun/.config/rsa_pem/rsa_pub.pem",
+    "RsaPrivateKeyFile": "/home/sun/.config/rsa_pem/rsa_pri.pem"
+  },
+  "AesGCMConfig": {
+    "AesGCMKey": "xxx",
+    "AesGCMNonce": "xxx"
+  },
+  "GodoServerUrl": "xxx:xxx",
+  "GithubRepo": "/home/sun/github/todo"
 }
 
 

@@ -9,7 +9,6 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
-	"strings"
 )
 
 type ApiClient struct {
@@ -27,11 +26,7 @@ func NewApiClient(url, key, nonce string) *ApiClient {
 }
 
 func (client *ApiClient) PushFile(fieldname, filename string) error {
-	index := strings.LastIndex(filename, "/")
-	if index == -1 {
-		index = 0
-	}
-	fileName := filename[index:]
+	fileName := util.ExtractFileName(filename)
 
 	// 创建表单文件
 	// CreateFormFile 用来创建表单，第一个参数是字段名，第二个参数是文件名

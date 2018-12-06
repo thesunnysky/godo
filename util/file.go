@@ -5,6 +5,7 @@ import (
 	"github.com/thesunnysky/godo/consts"
 	"io"
 	"os"
+	"strings"
 )
 
 type File struct {
@@ -50,6 +51,14 @@ func (f File) RewriteFile(data []string) {
 
 func (f File) Close() {
 	f.File.Close()
+}
+
+func ExtractFileName(filepath string) string {
+	index := strings.LastIndex(filepath, "/")
+	if index == -1 {
+		index = 0
+	}
+	return filepath[index:]
 }
 
 func PathExist(path string) bool {

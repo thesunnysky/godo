@@ -228,7 +228,8 @@ func PushGitCmd(args []string) {
 		os.Exit(-1)
 	}
 
-	gitFile := ClientConfig.GithubRepo + "/" + ClientConfig.DataFile
+	gitFileName := util.ExtractFileName(ClientConfig.DataFile)
+	gitFile := ClientConfig.GithubRepo + "/" + gitFileName
 	if err := ioutil.WriteFile(gitFile, cipherData, consts.FILE_MAKS);
 		err != nil {
 		fmt.Printf("write git file error:%s\n", gitFile)
