@@ -6,6 +6,11 @@ import (
 	"os"
 	"strings"
 )
+//todo
+// godo recover
+// godo backup
+// godo l -n
+// godo clean
 
 var g = &GitRepo{repoPath: ClientConfig.GithubRepo}
 

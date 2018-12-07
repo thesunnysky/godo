@@ -3,9 +3,12 @@ package util
 import (
 	"bufio"
 	"fmt"
+	"github.com/CodisLabs/codis/pkg/utils/errors"
 	"github.com/thesunnysky/godo/consts"
 	"io"
+	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -59,7 +62,18 @@ func ExtractFileName(filepath string) string {
 	if index == -1 {
 		index = 0
 	}
-	return filepath[index:]
+	return filepath[index+1:]
+}
+
+func ExtractFileDir(filepath string) (string, error) {
+	index := strings.LastIndex(filepath, "/")
+	if index == -1 {
+		return "", errors.New("file path is not start with root(/)")
+	} else if index == 0 {
+		return "/", nil
+	} else {
+		return filepath[:index], nil
+	}
 }
 
 func PathExist(path string) bool {
@@ -96,6 +110,58 @@ func RewriteFile(path string, data []byte) error {
 
 	if _, err := f.Write(data); err != nil {
 		fmt.Printf("write file %s error\n", path)
+		return err
+	}
+	return nil
+}
+
+func BackupFile(filepath string) error {
+	filename := ExtractFileName(filepath)
+	fileDir, err := ExtractFileDir(filepath)
+	if err != nil {
+		return err
+	}
+
+	fileInfos, err := ioutil.ReadDir(fileDir)
+	if err != nil {
+		return err
+	}
+
+	var maxSuffix int
+	for _, fileInfo := range fileInfos {
+		backupFileName := fileInfo.Name()
+		if !fileInfo.Mode().IsRegular() || !strings.HasPrefix(backupFileName, filename) {
+			continue
+		}
+		suffixPos := strings.LastIndex(backupFileName, ".")
+		suffixI, err := strconv.Atoi(backupFileName[suffixPos+1:])
+		if err == nil && suffixI > maxSuffix {
+			maxSuffix = suffixI
+		}
+	}
+
+	backFilepath := fileDir + "/" + filename + "." + strconv.Itoa(int(maxSuffix+1))
+	if err := CopyFile(backFilepath, filepath); err != nil {
+		return err
+	}
+	return nil
+}
+
+func CopyFile(dst, src string) error {
+	from, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer from.Close()
+
+	to, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY, consts.FILE_MAKS)
+	if err != nil {
+		return err
+	}
+	defer to.Close()
+
+	_, err = io.Copy(to, from)
+	if err != nil {
 		return err
 	}
 	return nil

@@ -338,6 +338,11 @@ func UpdateCmd(args []string) {
 		fmt.Printf("decryt remote tasks error:%s\n", remoteTasks)
 		os.Exit(-1)
 	}
+
+	if err := util.BackupFile(ClientConfig.DataFile); err != nil {
+		fmt.Printf("backup file %s error\n", ClientConfig.DataFile)
+	}
+
 	if err := util.RewriteFile(ClientConfig.DataFile, remoteTasks); err != nil {
 		fmt.Printf("rewrite local task file error:%s\n", err)
 		os.Exit(-1)
