@@ -20,7 +20,7 @@ func TestHyperEncrypt_Encrypt(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	hyperEncrypt := NewHyperEncrypt(pubKey, priKey)
+	hyperEncrypt := NewHyperEncryptB(pubKey, priKey)
 	originData := "hellosun"
 	encryptData, err := hyperEncrypt.Encrypt([]byte(originData))
 	if err != nil {
@@ -39,7 +39,7 @@ func TestHyperEncrypt_Decrypt(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	hyperEncrypt := NewHyperEncrypt(pubKey, priKey)
+	hyperEncrypt := NewHyperEncryptB(pubKey, priKey)
 
 	cyperData, err := ioutil.ReadFile(dstFile)
 	if err != nil {

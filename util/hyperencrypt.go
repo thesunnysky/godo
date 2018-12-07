@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"github.com/CodisLabs/codis/pkg/utils/log"
 	"io"
+	"io/ioutil"
 )
 
 type HyperEncrypt struct {
@@ -13,12 +14,25 @@ type HyperEncrypt struct {
 	aes Aes
 }
 
-func NewHyperEncrypt(rsaPublicKey, rsaPrivateKey []byte) *HyperEncrypt {
+func NewHyperEncryptB(rsaPublicKey, rsaPrivateKey []byte) *HyperEncrypt {
 	rasConf := Rsa{PublicKey: rsaPublicKey, PrivateKey: rsaPrivateKey}
 	aesKey, aesNonce := genAesKeyAndNonce()
 	aesConf := Aes{Key: aesKey, Nonce: aesNonce}
 	hyperEncryptConf := &HyperEncrypt{rsa: rasConf, aes: aesConf}
 	return hyperEncryptConf
+}
+
+func NewHyperEncryptF(rsaPublicKeyFile, rsaPrivateKeyFile string) (*HyperEncrypt, error) {
+	rsaPublicKey, err := ioutil.ReadFile(rsaPublicKeyFile)
+	if err != nil {
+		return nil, err
+	}
+
+	rsaPrivateKey, err := ioutil.ReadFile(rsaPrivateKeyFile)
+	if err != nil {
+		return nil, err
+	}
+	return NewHyperEncryptB(rsaPublicKey, rsaPrivateKey), nil
 }
 
 func (hyper *HyperEncrypt) Encrypt(plaintext []byte) ([]byte, error) {

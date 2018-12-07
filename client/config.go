@@ -20,13 +20,13 @@ type Config struct {
 }
 
 type RsaConfig struct {
-	RsaPublicKeyFile  string `json:"RsaPublicKeyFile"`
-	RsaPrivateKeyFile string `json:"RsaPrivateKeyFile"`
+	PublicKeyFile  string `json:"PublicKeyFile"`
+	PrivateKeyFile string `json:"PrivateKeyFile"`
 }
 
 type AesGCMConfig struct {
-	AesGCMKey   string `json:"AesGCMKey"`
-	AesGCMNonce string `json:"AesGCMNonce"`
+	Key   string `json:"Key"`
+	Nonce string `json:"Nonce"`
 }
 
 var ClientConfig = initDataFile()

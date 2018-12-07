@@ -1,6 +1,7 @@
 package godo
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"os"
 	"strings"
@@ -33,15 +34,21 @@ func Run() {
 	}
 
 	var listCmd = &cobra.Command{
-		Use:     "list [jobs_num]",
+		Use:     "list",
 		Aliases: []string{"l"},
 		Short:   "list jobs",
 		Long:    "list jobs",
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			ListCmdImpl(args)
+			remote, err := cmd.Flags().GetBool("remote")
+			if err != nil {
+				fmt.Println("parse flag error:%s\n", err)
+				os.Exit(-1)
+			}
+			ListTasks(args, remote)
 		},
 	}
+	listCmd.Flags().BoolP("remote", "r", false, "remote")
 
 	var cleanCmd = &cobra.Command{
 		Use:     "tidy",
@@ -52,6 +59,7 @@ func Run() {
 		},
 	}
 
+	//push-server
 	var pushServerCmd = &cobra.Command{
 		Use:  "push-server",
 		Args: cobra.MinimumNArgs(0),
@@ -60,14 +68,16 @@ func Run() {
 		},
 	}
 
+	//pull-server
 	var pullServerCmd = &cobra.Command{
 		Use:  "pull-server",
 		Args: cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			PullCmd(args)
+			PullServerCmd(args)
 		},
 	}
 
+	//godo push
 	var pushGitCmd = &cobra.Command{
 		Use:  "push",
 		Args: cobra.MinimumNArgs(0),
@@ -76,10 +86,13 @@ func Run() {
 		},
 	}
 
+	//godo pull
 	var pullGitCmd = &cobra.Command{
 		Use:  "pull",
 		Args: cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
+			gitCmArgs := []string{"pull"}
+			_ = g.GitCmd(gitCmArgs)
 		},
 	}
 
@@ -92,7 +105,6 @@ func Run() {
 		},
 	}
 
-	//todo encrypt task file and copy to git repo
 	var gitAddCmd = &cobra.Command{
 		Use:  "add",
 		Args: cobra.ArbitraryArgs,
@@ -147,9 +159,20 @@ func Run() {
 		},
 	}
 
+	//godo update
+	var updateCmd = &cobra.Command{
+		Use:     "update",
+		Aliases: []string{"u"},
+		Args:    cobra.MinimumNArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			UpdateCmd(args)
+		},
+	}
+
 	gitCmd.AddCommand(gitAddCmd, gitPushCmd, gitCommitCmd, gitPullCmd, gitAddAndCommitCmd)
 
 	var rootCmd = &cobra.Command{Use: "godo"}
-	rootCmd.AddCommand(addCmd, delCmd, listCmd, cleanCmd, pushServerCmd, pullServerCmd, gitCmd, pushGitCmd, pullGitCmd)
-	rootCmd.Execute()
+	rootCmd.AddCommand(addCmd, delCmd, listCmd, cleanCmd, pushServerCmd, pullServerCmd,
+		gitCmd, pushGitCmd, pullGitCmd, updateCmd)
+	_ = rootCmd.Execute()
 }

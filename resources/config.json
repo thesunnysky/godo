@@ -1,15 +1,15 @@
 {
-  "DataFile": "/home/sun/data/godo/godo.dat",
+  "DataFile": "$HOME/data/godo/godo.dat",
   "RsaConfig": {
-    "RsaPublicKeyFile": "/home/sun/.config/rsa_pem/rsa_pub.pem",
-    "RsaPrivateKeyFile": "/home/sun/.config/rsa_pem/rsa_pri.pem"
+    "PublicKeyFile": "$HOME/.config/rsa_pem/rsa_pub.pem",
+    "PrivateKeyFile": "$HOME/.config/rsa_pem/rsa_pri.pem"
   },
   "AesGCMConfig": {
-    "AesGCMKey": "xxx",
-    "AesGCMNonce": "xxx"
+    "Key": "xxx",
+    "Nonce": "xxx"
   },
   "GodoServerUrl": "xxx:xxx",
-  "GithubRepo": "/home/sun/github/todo"
+  "GithubRepo": "git repo path"
 }
 
 

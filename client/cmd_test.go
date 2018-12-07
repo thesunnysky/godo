@@ -31,7 +31,7 @@ func TestPushNormCmds(t *testing.T) {
 
 func TestPullNormCmds(t *testing.T) {
 	args := []string{}
-	PullCmd(args)
+	PullServerCmd(args)
 }
 
 func TestGitCmd(t *testing.T) {

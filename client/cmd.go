@@ -18,16 +18,27 @@ import (
 )
 
 var dataFile string
+var r, _ = regexp.Compile("[[:alnum:]]")
+var he *util.HyperEncrypt
 
 func init() {
 	dataFile = ClientConfig.DataFile
+	initHyperEncrypt()
 }
 
 type GitRepo struct {
 	repoPath string
 }
 
-var r, _ = regexp.Compile("[[:alnum:]]")
+func initHyperEncrypt() {
+	var err error
+	he, err = util.NewHyperEncryptF(ClientConfig.RsaConfig.PublicKeyFile,
+		ClientConfig.RsaConfig.PrivateKeyFile)
+	if err != nil {
+		fmt.Printf("new hyper encrypt tool error:%s\n", err)
+		os.Exit(-1)
+	}
+}
 
 func AddCmdImpl(args []string) {
 	var buf bytes.Buffer
@@ -81,25 +92,50 @@ func DelCmdImpl(args []string) {
 	fmt.Println("delete task successfully")
 }
 
-func ListCmdImpl(args []string) {
+func ListTasks(args []string, remote bool) {
+	if remote {
+		listRemoteTasks(args)
+	} else {
+		listLocalTasks(args)
+	}
+}
+
+func listLocalTasks(args []string) {
 	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDONLY, consts.FILE_MAKS)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
-	br := bufio.NewReader(f)
-	var index int
-	for {
-		str, err := br.ReadString(consts.LINE_SEPARATOR)
-		if err == io.EOF {
-			break
-		}
-		index++
-		if !isBlankLine(str) {
-			fmt.Printf("%d. %s", index, str)
-		}
+	printTask(f)
+}
+
+func listRemoteTasks(args []string) {
+	remoteTasks, err := decryptRemoteTasks()
+	if err != nil {
+		fmt.Printf("decrypt remote tasks error:%s\n", err)
+		os.Exit(-1)
 	}
+
+	printTask(bytes.NewReader(remoteTasks))
+}
+
+func decryptRemoteTasks() ([]byte, error) {
+	remoteTaskFileName := util.ExtractFileName(ClientConfig.DataFile)
+	remoteTaskFilePath := ClientConfig.GithubRepo + "/" + remoteTaskFileName
+
+	remoteTaskCipherData, err := ioutil.ReadFile(remoteTaskFilePath)
+	if err != nil {
+		fmt.Printf("read file error:%s\n", remoteTaskFilePath)
+		os.Exit(-1)
+	}
+
+	remoteTaskData, err := he.Decrypt(remoteTaskCipherData)
+	if err != nil {
+		fmt.Printf("decrypte file error:%s\n", remoteTaskFilePath)
+		return nil, err
+	}
+	return remoteTaskData, nil
 }
 
 func TidyCmdImpl(args []string) {
@@ -134,7 +170,7 @@ func isBlankLine(str string) bool {
 	return !r.MatchString(str)
 }
 
-func PullCmd(args []string) {
+func PullServerCmd(args []string) {
 	filename := ClientConfig.DataFile
 	index := strings.LastIndex(filename, "/")
 	if index == -1 {
@@ -152,8 +188,8 @@ func PullCmd(args []string) {
 	if err != nil {
 		fmt.Printf("read data from response error:%s\n", err)
 	}
-	aesUtil := util.Aes{Key: []byte(ClientConfig.AesGCMConfig.AesGCMKey),
-		Nonce: []byte(ClientConfig.AesGCMConfig.AesGCMNonce)}
+	aesUtil := util.Aes{Key: []byte(ClientConfig.AesGCMConfig.Key),
+		Nonce: []byte(ClientConfig.AesGCMConfig.Nonce)}
 	decryptedData, err := aesUtil.GcmDecrypt(data)
 	if err != nil {
 		fmt.Printf("decrypt data error:%s\n", err)
@@ -192,8 +228,8 @@ func PullCmd(args []string) {
 func PushServerCmd(args []string) {
 
 	apiClient := server.ApiClient{Url: ClientConfig.GodoServerUrl,
-		Key:   ClientConfig.AesGCMConfig.AesGCMKey,
-		Nonce: ClientConfig.AesGCMConfig.AesGCMNonce}
+		Key:   ClientConfig.AesGCMConfig.Key,
+		Nonce: ClientConfig.AesGCMConfig.Nonce}
 	if err := apiClient.PushFile(consts.GODO_DATA_FILE, ClientConfig.DataFile);
 		err != nil {
 		fmt.Printf("push task file to server error:%s\n", err)
@@ -209,19 +245,7 @@ func PushGitCmd(args []string) {
 		fmt.Printf("read godo data file error:%s\n", err)
 		os.Exit(-1)
 	}
-	publicKey, err := ioutil.ReadFile(ClientConfig.RsaConfig.RsaPublicKeyFile)
-	if err != nil {
-		fmt.Printf("read rsa public key file error:%s\n", err)
-		os.Exit(-1)
-	}
 
-	privateKey, err := ioutil.ReadFile(ClientConfig.RsaConfig.RsaPrivateKeyFile)
-	if err != nil {
-		fmt.Printf("read rsa private key file error:%s\n", err)
-		os.Exit(-1)
-	}
-
-	he := util.NewHyperEncrypt(publicKey, privateKey)
 	cipherData, err := he.Encrypt(textData)
 	if err != nil {
 		fmt.Printf("encryt task file error:%s\n", err)
@@ -236,7 +260,8 @@ func PushGitCmd(args []string) {
 		os.Exit(-1)
 	}
 
-	gitCmArgs := []string{"commit", "-am", "\"\""}
+	msg := time.Now().Format("2006-01-02 15:04:05")
+	gitCmArgs := []string{"commit", "-am", "\"" + msg + "\""}
 	if err := g.GitCmd(gitCmArgs); err != nil {
 		fmt.Printf("git commit -am error:%s\n", err)
 		os.Exit(-1)
@@ -248,6 +273,14 @@ func PushGitCmd(args []string) {
 		os.Exit(-1)
 	}
 	fmt.Printf("goto push sucessfully")
+}
+
+func (r *GitRepo) PullGitCmd(args []string) {
+	gitCmArgs := []string{"pull"}
+	if err := g.GitCmd(gitCmArgs); err != nil {
+		fmt.Printf("git pull error:%s\n", err)
+		os.Exit(-1)
+	}
 }
 
 func (r *GitRepo) GitCmd(args []string) (err error) {
@@ -297,4 +330,34 @@ func (r *GitRepo) GitCmd(args []string) (err error) {
 	}
 
 	return err
+}
+
+func UpdateCmd(args []string) {
+	remoteTasks, err := decryptRemoteTasks()
+	if err != nil {
+		fmt.Printf("decryt remote tasks error:%s\n", remoteTasks)
+		os.Exit(-1)
+	}
+	if err := util.RewriteFile(ClientConfig.DataFile, remoteTasks); err != nil {
+		fmt.Printf("rewrite local task file error:%s\n", err)
+		os.Exit(-1)
+	}
+
+	fmt.Println("update local task file successfully")
+}
+
+func printTask(r io.Reader) {
+	br := bufio.NewReader(r)
+	var index int
+	for {
+		str, err := br.ReadString(consts.LINE_SEPARATOR)
+		if err == io.EOF {
+			break
+		}
+		index++
+		if !isBlankLine(str) {
+			fmt.Printf("%d. %s", index, str)
+		}
+	}
+
 }

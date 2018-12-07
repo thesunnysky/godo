@@ -2,6 +2,7 @@ package util
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/thesunnysky/godo/consts"
 	"io"
 	"os"
@@ -74,4 +75,28 @@ func CreateDirIsNotExist(path string) error {
 		return nil
 	}
 	return os.MkdirAll(path, 0711)
+}
+
+func RewriteFile(path string, data []byte) error {
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, consts.FILE_MAKS)
+	if err != nil {
+		fmt.Printf("open file %s error\n", path)
+		return err
+	}
+
+	if err := f.Truncate(0); err != nil {
+		fmt.Printf("truncate file %s error\n", path)
+		return err
+	}
+
+	if _, err := f.Seek(0, 0); err != nil {
+		fmt.Printf("seek file %s error\n", path)
+		return err
+	}
+
+	if _, err := f.Write(data); err != nil {
+		fmt.Printf("write file %s error\n", path)
+		return err
+	}
+	return nil
 }
