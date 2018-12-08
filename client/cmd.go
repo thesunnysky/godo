@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/deckarep/golang-set"
 	"github.com/thesunnysky/godo/consts"
 	"github.com/thesunnysky/godo/server"
 	"github.com/thesunnysky/godo/util"
@@ -47,7 +48,7 @@ func AddCmdImpl(args []string) {
 		buf.WriteByte(' ')
 	}
 
-	f, err := os.OpenFile(dataFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, consts.FILE_MAKS)
+	f, err := os.OpenFile(dataFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, consts.FileMask)
 	if err != nil {
 		panic(err)
 	}
@@ -65,13 +66,13 @@ func DelCmdImpl(args []string) {
 		i, err := strconv.Atoi(str)
 		if err != nil {
 			fmt.Printf("invalid parameter value:%s\n", str)
-			os.Exit(consts.INVALID_PARAMETER_VALUE)
+			os.Exit(consts.InvalidParameterValue)
 		} else {
 			num = append(num, i)
 		}
 	}
 
-	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDWR, consts.FILE_MAKS)
+	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDWR, consts.FileMask)
 	defer f.Close()
 	file := util.File{File: f}
 	if err != nil {
@@ -92,16 +93,8 @@ func DelCmdImpl(args []string) {
 	fmt.Println("delete task successfully")
 }
 
-func ListTasks(args []string, remote bool) {
-	if remote {
-		listRemoteTasks(args)
-	} else {
-		listLocalTasks(args)
-	}
-}
-
-func listLocalTasks(args []string) {
-	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDONLY, consts.FILE_MAKS)
+func ListLocalTasks(args []string) {
+	f, err := os.OpenFile(dataFile, os.O_CREATE|os.O_RDONLY, consts.FileMask)
 	if err != nil {
 		panic(err)
 	}
@@ -110,7 +103,119 @@ func listLocalTasks(args []string) {
 	printTask(f)
 }
 
-func listRemoteTasks(args []string) {
+func BackupTaskFile() {
+	srcFile := ClientConfig.DataFile
+	backupFile := ClientConfig.DataFile + "." + consts.BackupTaskFileSuffix
+	if err := util.CopyFile(backupFile, srcFile); err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
+	fmt.Printf("backup to %s\n", util.ExtractFileName(backupFile))
+}
+
+func DelBackupTaskFile(args []string) {
+	var delAll bool
+	if (len(args) == 1) && (strings.Compare(strings.ToLower(args[0]), consts.DelAllBackupFileArg) == 0) {
+		delAll = true
+	}
+
+	argSlc := make([]interface{}, len(args))
+	for i, v := range args {
+		argSlc[i] = v
+	}
+	delSet := mapset.NewSetFromSlice(argSlc)
+
+	dataFilePath := ClientConfig.DataFile
+	dataFileName := util.ExtractFileName(dataFilePath)
+	dataFileDir, err := util.ExtractFileDir(dataFilePath)
+	if err != nil {
+		fmt.Printf("get task file dir error:%s\n", err)
+		os.Exit(-1)
+	}
+
+	fileInfos, err := ioutil.ReadDir(dataFileDir)
+	if err != nil {
+		fmt.Printf("read task file dir err:%s\n", err)
+		os.Exit(-1)
+	}
+
+	//skip "godo.dat" and "godo.dat.0"
+	for _, fileInfo := range fileInfos {
+		backupFileName := fileInfo.Name()
+		if !fileInfo.Mode().IsRegular() || !strings.HasPrefix(backupFileName, dataFileName) ||
+			strings.Compare(backupFileName, dataFileName) == 0 ||
+			strings.Compare(backupFileName, dataFileName+"."+consts.BackupTaskFileSuffix) == 0 {
+			continue
+		}
+
+		suffixPos := strings.LastIndex(backupFileName, ".")
+		backFileNoStr := backupFileName[suffixPos+1:]
+		if _, err := strconv.Atoi(backFileNoStr); err != nil {
+			continue
+		}
+
+		if delAll || delSet.Contains(backFileNoStr) {
+			if err := os.Remove(dataFileDir + "/" + backupFileName); err != nil {
+				fmt.Println(err)
+			}
+			fmt.Printf("delete file:%s\n", backupFileName)
+		}
+	}
+}
+
+func RecoverTaskFile() {
+	dstFile := ClientConfig.DataFile
+	backUpFile := ClientConfig.DataFile + "." + consts.BackupTaskFileSuffix
+	if err := util.CopyFile(dstFile, backUpFile); err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
+	fmt.Printf("recover tasks from %s\n", util.ExtractFileName(backUpFile))
+}
+
+func ListBackupFiles(args []string) {
+	filepath := ClientConfig.DataFile
+	filename := util.ExtractFileName(filepath)
+	fileDir, err := util.ExtractFileDir(filepath)
+	if err != nil {
+		fmt.Printf("get task file dir error:%s\n", err)
+		os.Exit(-1)
+	}
+
+	fileInfos, err := ioutil.ReadDir(fileDir)
+	if err != nil {
+		fmt.Printf("read task file dir err:%s\n", err)
+		os.Exit(-1)
+	}
+
+	for _, fileInfo := range fileInfos {
+		backupFileName := fileInfo.Name()
+		if !fileInfo.Mode().IsRegular() || !strings.HasPrefix(backupFileName, filename) {
+			continue
+		}
+
+		suffixPos := strings.LastIndex(backupFileName, ".")
+		backFileNo, err := strconv.Atoi(backupFileName[suffixPos+1:])
+		if err != nil {
+			continue
+		}
+		fmt.Printf("%d. %s\n", backFileNo, backupFileName)
+	}
+}
+
+func ListBackupTasks(backupFileNo int) {
+	backupFile := ClientConfig.DataFile + "." + strconv.Itoa(backupFileNo)
+	f, err := os.OpenFile(backupFile, os.O_RDONLY, consts.FileMask)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
+	defer f.Close()
+
+	printTask(f)
+}
+
+func ListRemoteTasks(args []string) {
 	remoteTasks, err := decryptRemoteTasks()
 	if err != nil {
 		fmt.Printf("decrypt remote tasks error:%s\n", err)
@@ -150,7 +255,7 @@ func TidyCmdImpl(args []string) {
 	br := bufio.NewReader(file.File)
 	var fileData []string
 	for {
-		str, err := br.ReadString(consts.LINE_SEPARATOR)
+		str, err := br.ReadString(consts.LineSeparator)
 		if err == io.EOF {
 			break
 		}
@@ -198,7 +303,7 @@ func PullServerCmd(args []string) {
 	//write download data to tempFile
 	tempFile := ClientConfig.DataFile + ".tmp"
 	targetFile := ClientConfig.DataFile
-	f, err := os.OpenFile(tempFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, consts.FILE_MAKS)
+	f, err := os.OpenFile(tempFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, consts.FileMask)
 	if err != nil {
 		fmt.Printf("open file error:%s\n", err)
 	}
@@ -254,7 +359,7 @@ func PushGitCmd(args []string) {
 
 	gitFileName := util.ExtractFileName(ClientConfig.DataFile)
 	gitFile := ClientConfig.GithubRepo + "/" + gitFileName
-	if err := ioutil.WriteFile(gitFile, cipherData, consts.FILE_MAKS);
+	if err := ioutil.WriteFile(gitFile, cipherData, consts.FileMask);
 		err != nil {
 		fmt.Printf("write git file error:%s\n", gitFile)
 		os.Exit(-1)
@@ -355,7 +460,7 @@ func printTask(r io.Reader) {
 	br := bufio.NewReader(r)
 	var index int
 	for {
-		str, err := br.ReadString(consts.LINE_SEPARATOR)
+		str, err := br.ReadString(consts.LineSeparator)
 		if err == io.EOF {
 			break
 		}

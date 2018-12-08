@@ -36,7 +36,7 @@ func initDataFile() *Config {
 	configFile := homeDir + "/" + ConfigFile
 	if !pathExist(configFile) {
 		fmt.Printf("consts file:$HOME/%s do not exist\n", ConfigFile)
-		os.Exit(consts.CONFIG_FILE_DO_NOT_EXIST)
+		os.Exit(consts.ConfigFileDoNotExist)
 	}
 	f, err := os.Open(configFile)
 	if err != nil {

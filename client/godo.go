@@ -6,11 +6,6 @@ import (
 	"os"
 	"strings"
 )
-//todo
-// godo recover
-// godo backup
-// godo l -n
-// godo clean
 
 var g = &GitRepo{repoPath: ClientConfig.GithubRepo}
 
@@ -19,41 +14,76 @@ func Run() {
 	var addCmd = &cobra.Command{
 		Use:     "add [jobs]",
 		Aliases: []string{"a"},
-		Short:   "a [jobs]",
-		Long:    "add [jobs]",
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			AddCmdImpl(args)
 		},
 	}
 
+	var delFileArgs *[]string
 	var delCmd = &cobra.Command{
-		Use:     "del [jobs_index]",
+		Use:     "del",
 		Aliases: []string{"d"},
-		Short:   "d [jobs_index]",
-		Long:    "del [jobs_index]",
-		Args:    cobra.MinimumNArgs(1),
+		Args:    cobra.ArbitraryArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			DelCmdImpl(args)
+			if len(*delFileArgs) != 0 {
+				DelBackupTaskFile(*delFileArgs)
+			} else {
+				DelCmdImpl(args)
+			}
 		},
 	}
+	delFileArgs = delCmd.Flags().StringArrayP("file", "f", []string{}, "delete backup file")
 
+	// godo ls
 	var listCmd = &cobra.Command{
 		Use:     "list",
-		Aliases: []string{"l"},
-		Short:   "list jobs",
-		Long:    "list jobs",
+		Aliases: []string{"ls", "l"},
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			remote, err := cmd.Flags().GetBool("remote")
-			if err != nil {
-				fmt.Println("parse flag error:%s\n", err)
+			flagCount := cmd.Flags().NFlag()
+			if flagCount > 1 {
+				fmt.Printf("more than two flag are set, exit...")
 				os.Exit(-1)
 			}
-			ListTasks(args, remote)
+
+			remote, err := cmd.Flags().GetBool("remote")
+			if err != nil {
+				fmt.Printf("parse flag error:%s\n", err)
+				os.Exit(-1)
+			}
+
+			showBackupFileList, err := cmd.Flags().GetBool("backup")
+			if err != nil {
+				fmt.Printf("parse flag error:%s\n", err)
+				os.Exit(-1)
+			}
+
+			backupFileNo, err := cmd.Flags().GetInt("file")
+			if err != nil {
+				fmt.Printf("parse flag error:%s\n", err)
+				os.Exit(-1)
+			}
+
+			if remote {
+				//print remote task file
+				ListRemoteTasks(args)
+			} else if showBackupFileList {
+				//show backup file list
+				ListBackupFiles(args)
+			} else if backupFileNo > 0 {
+				//print local task file
+				ListBackupTasks(backupFileNo)
+			} else {
+				//print local task file
+				ListLocalTasks(args)
+			}
+
 		},
 	}
-	listCmd.Flags().BoolP("remote", "r", false, "remote")
+	listCmd.Flags().BoolP("remote", "r", false, "list tasks that recorded in git repo")
+	listCmd.Flags().IntP("file", "f", 0, "backup file list or backup file content")
+	listCmd.Flags().BoolP("backup", "b", false, "show backup file list")
 
 	var cleanCmd = &cobra.Command{
 		Use:     "tidy",
@@ -61,6 +91,33 @@ func Run() {
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			TidyCmdImpl(args)
+		},
+	}
+
+	var backupCmd = &cobra.Command{
+		Use:     "backup",
+		Aliases: []string{"b"},
+		Args:    cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			BackupTaskFile()
+		},
+	}
+
+	var recoverCmd = &cobra.Command{
+		Use:     "recover",
+		Aliases: []string{"r"},
+		Args:    cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			RecoverTaskFile()
+		},
+	}
+
+	var cleanBackupFileCmd = &cobra.Command{
+		Use:     "clean",
+		Aliases: []string{"c"},
+		Args:    cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			//todo
 		},
 	}
 
@@ -178,6 +235,6 @@ func Run() {
 
 	var rootCmd = &cobra.Command{Use: "godo"}
 	rootCmd.AddCommand(addCmd, delCmd, listCmd, cleanCmd, pushServerCmd, pullServerCmd,
-		gitCmd, pushGitCmd, pullGitCmd, updateCmd)
+		gitCmd, pushGitCmd, pullGitCmd, updateCmd, backupCmd, recoverCmd, cleanBackupFileCmd)
 	_ = rootCmd.Execute()
 }

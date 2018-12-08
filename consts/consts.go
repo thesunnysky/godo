@@ -2,10 +2,16 @@ package consts
 
 //godo client consts
 const (
-	INVALID_PARAMETER_VALUE  = 1
-	CONFIG_FILE_DO_NOT_EXIST = 2
-	FILE_MAKS                = 0666
-	LINE_SEPARATOR           = '\n'
+	InvalidParameterValue = 1
+	ConfigFileDoNotExist  = 2
+	FileMask              = 0666
+	LineSeparator         = '\n'
+	BackupTaskFileSuffix  = "0"
+)
+
+const (
+	DelAllBackupFileArg = "all"
+	DelAllTasks         = "all"
 )
 
 //godo-server consts

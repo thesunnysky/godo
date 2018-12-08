@@ -11,7 +11,7 @@ import (
 
 func TestListCmds(t *testing.T) {
 	args := []string{}
-	ListCmdImpl(args)
+	ListLocalTasks(args)
 }
 
 func TestTidyCmds(t *testing.T) {
@@ -35,8 +35,15 @@ func TestPullNormCmds(t *testing.T) {
 }
 
 func TestGitCmd(t *testing.T) {
-	args := []string{"status"}
-	_ = GitCmd(args)
+}
+
+func TestListBackupFiles(t *testing.T) {
+	args := []string{}
+	ListBackupFiles(args)
+}
+
+func TestListBackupTasks(t *testing.T) {
+	ListBackupTasks(1)
 }
 
 /*func TestMmapReadFile(t *testing.T) {
@@ -46,3 +53,20 @@ func TestGitCmd(t *testing.T) {
 		panic(err)
 	}
 }*/
+
+func TestDelBackupTaskFile(t *testing.T) {
+	type args struct {
+		args []string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{"hello", args{args: []string{"all"}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			DelBackupTaskFile(tt.args.args)
+		})
+	}
+}

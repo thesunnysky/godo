@@ -20,7 +20,7 @@ func (f File) ReadFile() []string {
 	br := bufio.NewReader(f.File)
 	var fileData []string
 	for {
-		str, err := br.ReadString(consts.LINE_SEPARATOR)
+		str, err := br.ReadString(consts.LineSeparator)
 		if err != nil || err == io.EOF {
 			break
 		}
@@ -92,7 +92,7 @@ func CreateDirIsNotExist(path string) error {
 }
 
 func RewriteFile(path string, data []byte) error {
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, consts.FILE_MAKS)
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, consts.FileMask)
 	if err != nil {
 		fmt.Printf("open file %s error\n", path)
 		return err
@@ -154,7 +154,7 @@ func CopyFile(dst, src string) error {
 	}
 	defer from.Close()
 
-	to, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY, consts.FILE_MAKS)
+	to, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY, consts.FileMask)
 	if err != nil {
 		return err
 	}
