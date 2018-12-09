@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-var ConfigFile = ".godo/config.json"
+var ConfigFile = ".config/godo/config.json"
 
 type Config struct {
 	DataFile      string       `json:"DataFile"`
