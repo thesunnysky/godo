@@ -19,7 +19,8 @@ import (
 )
 
 var dataFile string
-var r, _ = regexp.Compile("[[:alnum:]]")
+//var r, _ = regexp.Compile("[[:alnum:]]")
+var r, _ = regexp.Compile("^\\s*$")
 var he *util.HyperEncrypt
 
 func init() {
@@ -272,7 +273,7 @@ func TidyCmdImpl(args []string) {
 }
 
 func isBlankLine(str string) bool {
-	return !r.MatchString(str)
+	return r.MatchString(str)
 }
 
 func PullServerCmd(args []string) {
