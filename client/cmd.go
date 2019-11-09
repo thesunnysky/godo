@@ -19,6 +19,7 @@ import (
 )
 
 var dataFile string
+
 //var r, _ = regexp.Compile("[[:alnum:]]")
 var r, _ = regexp.Compile("^\\s*$")
 var he *util.HyperEncrypt
@@ -378,7 +379,7 @@ func PushGitCmd(args []string) {
 		fmt.Printf("git push error:%s\n", err)
 		os.Exit(-1)
 	}
-	fmt.Printf("goto push sucessfully")
+	fmt.Println("goto push successfully")
 }
 
 func (r *GitRepo) PullGitCmd(args []string) {

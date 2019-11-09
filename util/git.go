@@ -36,10 +36,10 @@ func checkResult(stdout, stderr *bytes.Buffer, err error) error {
 		return err
 	}
 	if stderr.Len() > 0 {
-		log.Print(stderr.Bytes())
+		log.Println(stderr.Bytes())
 	}
 	if stdout.Len() > 0 {
-		log.Print(stdout.Bytes())
+		log.Println(stdout.Bytes())
 	}
 	return nil
 
